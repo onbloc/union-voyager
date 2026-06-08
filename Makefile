@@ -14,12 +14,13 @@ VOYAGER_LOG         := voyager.log
 VOYAGER_MODULES_LOG := voyager-modules-plugins.log
 VOYAGER_RUN_LOG     := voyager-run.log
 
-.PHONY: help build init run run-reset stop
+.PHONY: help build-voyager build-plugins init run run-reset stop
 
 help:
 	@echo "Targets:"
-	@echo "  build   — start nix builds in the background (nohup, logs to *.log)"
-	@echo "  init    — symlink nix store binaries to target/debug/ after build completes"
+	@echo "  build-voyager  — build voyager in the background (nohup)"
+	@echo "  build-plugins  — build voyager-modules-plugins in the background (nohup)"
+	@echo "  init           — symlink nix store binaries to target/debug/ after build completes"
 	@echo "  run     — start voyager in the background (nohup)"
 	@echo "  run-reset — truncate the voyager queue then start voyager"
 	@echo "  stop      — kill the running voyager process"
@@ -64,12 +65,15 @@ init:
 	@echo "   to use voyager in your shell:"
 	@echo "   export PATH=\$$PATH:$(CURDIR)/result/bin"
 
-build:
+build-voyager:
 	@command -v nix >/dev/null 2>&1 || { \
 		echo "ERROR: 'nix' not found on PATH. Install Nix from https://nixos.org/download"; exit 1; }
-	@echo ">> starting nix builds in background"
 	@nohup nix build .#voyager -L > $(VOYAGER_LOG) 2>&1 &
+	@echo "ok: voyager build started  (tail -f $(VOYAGER_LOG))"
+
+build-plugins:
+	@command -v nix >/dev/null 2>&1 || { \
+		echo "ERROR: 'nix' not found on PATH. Install Nix from https://nixos.org/download"; exit 1; }
 	@nohup nix build .#voyager-modules-plugins -L > $(VOYAGER_MODULES_LOG) 2>&1 &
-	@echo "ok: builds started (run 'make init' once complete)"
-	@echo "   tail -f $(VOYAGER_LOG)"
-	@echo "   tail -f $(VOYAGER_MODULES_LOG)"
+	@echo "ok: plugins build started  (tail -f $(VOYAGER_MODULES_LOG))"
+
