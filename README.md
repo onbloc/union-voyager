@@ -63,21 +63,26 @@ sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
 
 ## Build
 
+Run the two builds **sequentially** — voyager first, then plugins. Running them simultaneously causes a SQLite eval cache conflict and the voyager build will fail silently.
+
 ```bash
-make build
+make build-voyager   # wait for completion
+make build-plugins
 ```
 
-Runs two nix builds in parallel.
+> **Warning**: Do not run `make build-voyager` and `make build-plugins` at the same time.
 
-| Target | Log |
-|--------|-----|
-| `voyager` | `voyager.log` |
-| `voyager-modules-plugins` | `voyager-modules-plugins.log` |
+Build artifacts are placed in fixed paths:
 
-Build artifacts are symlinked under `./result/`. To use `voyager` directly in your shell, add the binary path to your `PATH`:
+| Target | Output | Log |
+|--------|--------|-----|
+| `make build-voyager` | `result-voyager/bin/voyager` | `voyager.log` |
+| `make build-plugins` | `result-plugins/bin/voyager-*` | `voyager-modules-plugins.log` |
+
+To use `voyager` directly in your shell:
 
 ```bash
-export PATH=$PATH:$(pwd)/result/bin
+export PATH=$PATH:$(pwd)/result-voyager/bin
 ```
 
 ---
