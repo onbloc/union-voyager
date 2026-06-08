@@ -143,7 +143,8 @@ voyager --config-file-path voyager/config.jsonc index dev.ibc -e
 ## Make Targets
 
 ```
-make build   — build voyager and voyager-modules-plugins via nix (parallel)
+make build   — start nix builds in the background (nohup, logs to *.log)
+make init    — symlink nix store binaries to target/debug/ after build completes
 make run     — start voyager in the background via nohup (logs to voyager-run.log)
 make run-reset — truncate the voyager queue then start voyager
 make stop      — kill the running voyager process

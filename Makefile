@@ -14,11 +14,12 @@ VOYAGER_LOG         := voyager.log
 VOYAGER_MODULES_LOG := voyager-modules-plugins.log
 VOYAGER_RUN_LOG     := voyager-run.log
 
-.PHONY: help build run run-reset stop
+.PHONY: help build init run run-reset stop
 
 help:
 	@echo "Targets:"
-	@echo "  build   — build voyager and voyager-modules-plugins via nix (parallel, logs to *.log)"
+	@echo "  build   — start nix builds in the background (nohup, logs to *.log)"
+	@echo "  init    — symlink nix store binaries to target/debug/ after build completes"
 	@echo "  run     — start voyager in the background (nohup)"
 	@echo "  run-reset — truncate the voyager queue then start voyager"
 	@echo "  stop      — kill the running voyager process"
@@ -52,14 +53,9 @@ run:
 	@echo ">> voyager started (pid: $$!)"
 	@echo "   tail -f $(VOYAGER_RUN_LOG)"
 
-build:
-	@command -v nix >/dev/null 2>&1 || { \
-		echo "ERROR: 'nix' not found on PATH. Install Nix from https://nixos.org/download"; exit 1; }
-	@echo ">> building voyager and voyager-modules-plugins (parallel)"
-	@nix build .#voyager -L > $(VOYAGER_LOG) 2>&1 & \
-	 nix build .#voyager-modules-plugins -L > $(VOYAGER_MODULES_LOG) 2>&1 & \
-	 wait
-	@echo "ok: build complete  (see $(VOYAGER_LOG) and $(VOYAGER_MODULES_LOG))"
+init:
+	@[ -f ./result/bin/voyager ] || { \
+		echo "ERROR: build output not found. Run 'make build' and wait for it to complete."; exit 1; }
 	@echo ">> symlinking voyager modules to target/debug/"
 	@mkdir -p target/debug && \
 	 for bin in /nix/store/*voyager*/bin/voyager-*; do ln -sf "$$bin" "target/debug/$$(basename $$bin)"; done
@@ -67,3 +63,13 @@ build:
 	@echo ""
 	@echo "   to use voyager in your shell:"
 	@echo "   export PATH=\$$PATH:$(CURDIR)/result/bin"
+
+build:
+	@command -v nix >/dev/null 2>&1 || { \
+		echo "ERROR: 'nix' not found on PATH. Install Nix from https://nixos.org/download"; exit 1; }
+	@echo ">> starting nix builds in background"
+	@nohup nix build .#voyager -L > $(VOYAGER_LOG) 2>&1 &
+	@nohup nix build .#voyager-modules-plugins -L > $(VOYAGER_MODULES_LOG) 2>&1 &
+	@echo "ok: builds started (run 'make init' once complete)"
+	@echo "   tail -f $(VOYAGER_LOG)"
+	@echo "   tail -f $(VOYAGER_MODULES_LOG)"
