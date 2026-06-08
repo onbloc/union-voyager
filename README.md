@@ -1,129 +1,151 @@
-<div align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./.github/images/union-logo-white.svg">
-    <source media="(prefers-color-scheme: light)" srcset="./.github/images/union-logo-black.svg">
-    <img alt="Union"
-         src="./.github/images/union-logo-black.svg"
-         width="100%">
-  </picture>
-</div>
+# union-voyager
 
-<br/>
+A fork of [Union](https://github.com/unionlabs/union)'s Voyager IBC relayer.
 
-<div align="center">
+Voyager is a high-performance IBC relayer that operates as a PostgreSQL-backed state machine. All state is persisted in the database, allowing the relayer to resume exactly where it left off after a crash or restart.
 
-[![built with garnix](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fgarnix.io%2Fapi%2Fbadges%2Funionlabs%2Funion%3Fbranch%3Dmain)](https://garnix.io)
-[![Docs](https://img.shields.io/badge/docs-main-blue)][docs]
-[![Discord badge]](https://discord.union.build)
-[![Twitter handle]][twitter badge]
+> **Upstream**: [unionlabs/union](https://github.com/unionlabs/union)
+> **Environment**: Instructions and scripts are written for **Amazon Linux**.
 
-</div>
+---
 
-Union is the hyper-efficient zero-knowledge infrastructure layer for general message passing, asset transfers, NFTs, and DeFi. Its based on [Consensus Verification] and has no dependencies on trusted third parties, oracles, multi-signatures or MPC. It implements [IBC] for compatibility with [Cosmos] chains and connects to EVM chains like [Ethereum], [Berachain (beacon-kit)](https://github.com/berachain/beacon-kit), [Arbitrum], and more.
+## Prerequisites
 
-The upgradability of contracts on other chains, connections, token configurations, and evolution of the protocol will all be controlled by decentralized governance, aligning the priorities of Union with its users, validators, and operators.
+### 1. Nix
 
-## Components
+Builds are managed through Nix. Supported systems: **Linux (x86_64, aarch64)** and **macOS M-series (aarch64-darwin)**.
 
-| Component                                           | Description                                          | Language(s)           |
-| --------------------------------------------------- | ---------------------------------------------------- | --------------------- |
-| [`uniond`](./uniond/README.md)                      | The Union node implementation, using [`CometBLS`]    | [Go]                  |
-| [`galoisd`](./galoisd)                              | The zero-knowledge prover implementation             | [Go] [Gnark]          |
-| [`voyager`](./voyager)                              | Modular hyper-performant cross-ecosystem relayer     | [Rust]                |
-| [`cosmwasm`](./cosmwasm)                            | [CosmWasm] smart contract stack                      | [Rust]                |
-| [`light-clients`](./cosmwasm/lightclient)           | [Light Clients] for various ecosystems               | [Rust]                |
-| [`unionvisor`](./unionvisor/README.md)              | Node supervisor intended for production usage        | [Rust]                |
-| [`drip`](./drip)                                    | Faucet for [Cosmos] chains: [app.union.build/faucet] | [Rust]                |
-| [`evm`](./evm)                                      | [EVM] smart contract stack                           | [Solidity]            |
-| [`app`](./app2)                                     | [app.union.build]                                    | [TypeScript] [Svelte] |
-| [`site`](./site)                                    | [union.build]                                        | [TypeScript] [Astro]  |
-| [`TypeScript SDK`](./ts-sdk)                        | TypeScript SDK for interacting with Union            | [TypeScript]          |
-
-## Quickstart
-
-Install [Nix] to _[reproducibly build](https://en.wikipedia.org/wiki/Reproducible_builds) any component_, and to enter a dev shell with _all dependencies_:
-
-```sh
+```bash
 curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
 ```
 
-_(Note that some components can only be built on Linux. If you are using macOS, we recommend using [OrbStack] to easily set up a [NixOS] VM within two minutes. Most Union developers use macOS with [OrbStack], and there is no need to install Nix inside of the [NixOS] VM.)_
+**Configure Nix cache** (speeds up builds significantly)
 
-You can now _reproducibly_ build any of Union's components from source:
-
-```sh
-nix build .#uniond -L
-nix build .#voyager -L
-nix build .#app -L
-
-# to see all packages, run:
-nix flake show
+```bash
+echo "extra-substituters = https://cache.garnix.io" | sudo tee -a /etc/nix/nix.conf
+echo "extra-trusted-public-keys = cache.garnix.io:CTFPyKSLcx5RMJKfLo5EEPUObbA78b0YQ2DTCJXqr9g=" | sudo tee -a /etc/nix/nix.conf
 ```
 
-The result of whatever you build will be in `result/`
+Verify:
 
-You can now also enter our dev shell, which has all of the dependencies (`cargo`, `rustc`, `node`, `go`, etc.) you need to work on any component:
-_(Don't worry, this will not affect your system outside of this repo)_
-
-```sh
-nix develop
+```bash
+nix show-config | grep substituters
 ```
 
-Run the following to format the entire repo and check your spelling before each PR:
+### 2. PostgreSQL (Amazon Linux)
 
-```sh
-nix run .#pre-commit -L
+Voyager uses PostgreSQL as its work queue backend.
+
+**Install and initialize**
+
+```bash
+sudo dnf install -y postgresql15 postgresql15-server
+sudo postgresql-setup --initdb
+sudo systemctl enable --now postgresql
 ```
 
-Check the `#developers` channel on [Union's discord](https://discord.union.build) if you need any help with this.
+**Configure authentication** (`/var/lib/pgsql/data/pg_hba.conf`)
 
-## Supported Chains
+Add or update the following line to enable password-based authentication:
 
-| Network       | Mainnets                    | Testnets                               |
-| ------------- | --------------------------- | -------------------------------------- |
-| **Arbitrum**  | `arbitrum.42161`            | `arbitrum.421614`                      |
-| **Babylon**   | `babylon.bbn-1`             | `babylon.bbn-test-6`                   |
-| **Base**      | `base.8453`                 | `base.84532`                           |
-| **Berachain** | `berachain.80094`           | `berachain.80069`                      |
-| **Bob**       | `bob.60808`                 | `bob.808813`                           |
-| **BSC**       | `bsc.56`                    | `bsc.97`                               |
-| **Corn**      | `corn.21000000`             | `corn.21000001`                        |
-| **Ethereum**  | `ethereum.1`                | `ethereum.11155111`, `ethereum.560048` |
-| **Osmosis**   | `osmosis.osmosis-1`         | `osmosis.osmo-test-5`                  |
-| **Sei**       | `sei.pacific-1`, `sei.1329` | `sei.atlantic-2`, `sei.1328`           |
-| **Sui**       | -                           | `sui.4c78adac`                         |
-| **Union**     | `union.union-1`             | `union.union-testnet-10`               |
-| **Xion**      | `xion.xion-mainnet-1`       | `xion.xion-testnet-2`                  |
+```
+host    all    all    127.0.0.1/32    md5
+```
 
-*For the full list see https://docs.union.build/ucs/04/*
+**Set password and restart**
 
-## Docs
+```bash
+sudo systemctl restart postgresql
+sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
+```
 
-The official docs are hosted [here][docs]. Each individual component also has accompanying developer documentation for contributors, which you can find in each `README.md`.
+---
 
-[app.union.build]: https://app.union.build
-[app.union.build/faucet]: https://app.union.build/faucet
-[arbitrum]: https://github.com/OffchainLabs/arbitrum
-[astro]: https://astro.build
-[consensus verification]: https://union.build/docs/concepts/consensus-verification/
-[cosmos]: https://cosmos.network
-[cosmwasm]: https://cosmwasm.com/
-[discord badge]: https://img.shields.io/discord/1158939416870522930?logo=discord
-[docs]: https://docs.union.build "Official Union Docs"
-[ethereum]: https://ethereum.org
-[evm]: https://ethereum.org/en/developers/docs/evm/
-[gnark]: https://github.com/ConsenSys/gnark
-[go]: https://go.dev/
-[ibc]: https://github.com/cosmos/ibc "cosmos/ibc"
-[light clients]: https://a16zcrypto.com/posts/article/an-introduction-to-light-clients/
-[nix]: https://zero-to-nix.com/
-[nixos]: https://nixos.org
-[orbstack]: https://orbstack.dev/
-[rust]: https://www.rust-lang.org/
-[solidity]: https://soliditylang.org/
-[svelte]: https://svelte.dev
-[twitter badge]: https://twitter.com/intent/follow?screen_name=union_build
-[twitter handle]: https://img.shields.io/twitter/follow/union_build.svg?style=social&label=Follow
-[typescript]: https://www.typescriptlang.org/
-[union.build]: https://union.build
-[`cometbls`]: https://github.com/unionlabs/cometbls
+## Build
+
+```bash
+make build
+```
+
+Runs two nix builds in parallel.
+
+| Target | Log |
+|--------|-----|
+| `voyager` | `voyager.log` |
+| `voyager-modules-plugins` | `voyager-modules-plugins.log` |
+
+Build artifacts are symlinked under `./result/`. To use `voyager` directly in your shell, add the binary path to your `PATH`:
+
+```bash
+export PATH=$PATH:$(pwd)/result/bin
+```
+
+---
+
+## Configuration
+
+Use `voyager/config.jsonc` as a reference. The minimum required fields are:
+
+```jsonc
+{
+  "voyager": {
+    "num_workers": 50,
+    "queue": {
+      "type": "pg-queue",
+      "database_url": "postgres://postgres:postgres@127.0.0.1:5432/voyager"
+    }
+  },
+  "modules": { ... },
+  "plugins": [ ... ]
+}
+```
+
+To view the full config schema:
+
+```bash
+voyager config schema
+```
+
+---
+
+## Run
+
+```bash
+make run
+```
+
+Starts voyager in the background via `nohup`. Runtime logs are written to `voyager-run.log`.
+
+```bash
+tail -f voyager-run.log
+```
+
+---
+
+## Indexing
+
+Run the following commands to index each chain. Update the chain IDs to match your config.
+
+```bash
+voyager --config-file-path voyager/config.jsonc index <chain-id> -e
+```
+
+Example:
+
+```bash
+voyager --config-file-path voyager/config.jsonc index union-testnet-10 -e
+voyager --config-file-path voyager/config.jsonc index 11155111 -e
+voyager --config-file-path voyager/config.jsonc index dev.ibc -e
+```
+
+---
+
+## Make Targets
+
+```
+make build   — build voyager and voyager-modules-plugins via nix (parallel)
+make run     — start voyager in the background via nohup (logs to voyager-run.log)
+make run-reset — truncate the voyager queue then start voyager
+make stop      — kill the running voyager process
+make help    — list available targets
+```
