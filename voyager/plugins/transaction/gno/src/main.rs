@@ -476,7 +476,7 @@ fn process_msgs(
         .map(|IbcMessage::IbcUnion(msg)| {
             let signer = signer.address().to_string();
 
-            let relayer = fee_recipient.map_or(signer.clone(), |fr| fr.to_string());
+            let _relayer = fee_recipient.map_or(signer.clone(), |fr| fr.to_string());
 
             let body = match msg.clone() {
                 Datagram::CreateClient(msg) => {
@@ -488,20 +488,19 @@ import (
     core "{ibc_core_realm}"
 )
 
-func main() {{
-	id := core.CreateClient(cross, core.MsgCreateClient{{
-    	ClientType: "{}",
-    	ClientStateBytes: {},
-    	ConsensusStateBytes: {},
-    	// Relayer: = {},
-	}})
+func main(cur realm) {{
+	id := core.CreateClient(cross(cur), core.NewMsgCreateClient(
+    	cross(cur),
+    	"{}",
+    	{},
+    	{},
+	))
 	println(id)
 }}
                     "#,
                         msg.client_type,
                         gno_bytes(&msg.client_state_bytes),
                         gno_bytes(&msg.consensus_state_bytes),
-                        relayer,
                     )
                 }
                 Datagram::UpdateClient(msg) => {
@@ -513,18 +512,17 @@ import (
     core "{ibc_core_realm}"
 )
 
-func main() {{
-	height := core.UpdateClient(cross, core.MsgUpdateClient{{
-    	ClientId: core.ClientId({}),
-    	ClientMessage: {},
-    	// Relayer: {},
-	}})
+func main(cur realm) {{
+	height := core.UpdateClient(cross(cur), core.NewMsgUpdateClient(
+    	cross(cur),
+    	core.ClientId({}),
+    	{},
+	))
 	println(height)
 }}
                     "#,
                         msg.client_id,
                         gno_bytes(&msg.client_message),
-                        relayer,
                     )
                 }
                 Datagram::ConnectionOpenInit(msg) => {
@@ -536,12 +534,13 @@ import (
     core "{ibc_core_realm}"
 )
 
-func main() {{
-	height := core.ConnectionOpenInit(cross, core.MsgConnectionOpenInit{{
-    	ClientId: core.ClientId({}),
-    	CounterpartyClientId: core.ClientId({}),
-	}})
-	println(height)
+func main(cur realm) {{
+	id := core.ConnectionOpenInit(cross(cur), core.NewMsgConnectionOpenInit(
+    	cross(cur),
+    	core.ClientId({}),
+    	core.ClientId({}),
+	))
+	println(id)
 }}
                     "#,
                         msg.client_id, msg.counterparty_client_id,
@@ -556,14 +555,15 @@ import (
     core "{ibc_core_realm}"
 )
 
-func main() {{
-	core.ConnectionOpenTry(cross, core.MsgConnectionOpenTry{{
-    	ClientId: core.ClientId({}),
-    	CounterpartyClientId: core.ClientId({}),
-    	CounterpartyConnectionId: core.ConnectionId({}),
-    	ProofInit: {},
-    	ProofHeight: core.Height({}),
-	}})
+func main(cur realm) {{
+	core.ConnectionOpenTry(cross(cur), core.NewMsgConnectionOpenTry(
+    	cross(cur),
+    	core.ClientId({}),
+    	core.ClientId({}),
+    	core.ConnectionId({}),
+    	{},
+    	core.Height({}),
+	))
 }}
                     "#,
                         msg.client_id,
@@ -582,13 +582,14 @@ import (
     core "{ibc_core_realm}"
 )
 
-func main() {{
-	core.ConnectionOpenAck(cross, core.MsgConnectionOpenAck{{
-    	ConnectionId: core.ConnectionId({}),
-    	CounterpartyConnectionId: core.ConnectionId({}),
-    	ProofTry: {},
-    	ProofHeight: core.Height({}),
-	}})
+func main(cur realm) {{
+	core.ConnectionOpenAck(cross(cur), core.NewMsgConnectionOpenAck(
+    	cross(cur),
+    	core.ConnectionId({}),
+    	core.ConnectionId({}),
+    	{},
+    	core.Height({}),
+	))
 }}
                     "#,
                         msg.connection_id,
@@ -606,12 +607,13 @@ import (
     core "{ibc_core_realm}"
 )
 
-func main() {{
-	core.ConnectionOpenConfirm(cross, core.MsgConnectionOpenConfirm{{
-    	ConnectionId: core.ConnectionId({}),
-    	ProofAck: {},
-    	ProofHeight: core.Height({}),
-	}})
+func main(cur realm) {{
+	core.ConnectionOpenConfirm(cross(cur), core.NewMsgConnectionOpenConfirm(
+    	cross(cur),
+    	core.ConnectionId({}),
+    	{},
+    	core.Height({}),
+	))
 }}
                     "#,
                         msg.connection_id,
@@ -628,13 +630,14 @@ import (
     core "{ibc_core_realm}"
 )
 
-func main() {{
-	core.ChannelOpenInit(cross, core.MsgChannelOpenInit{{
-    	PortId: {},
-    	CounterpartyPortId: {},
-    	ConnectionId: {},
-    	Version: "{}",
-	}})
+func main(cur realm) {{
+	core.ChannelOpenInit(cross(cur), core.NewMsgChannelOpenInit(
+    	cross(cur),
+    	{},
+    	{},
+    	core.ConnectionId({}),
+    	"{}",
+	))
 }}
                     "#,
                         gno_bytes(&msg.port_id),
@@ -652,20 +655,22 @@ import (
     core "{ibc_core_realm}"
 )
 
-func main() {{
-	core.ChannelOpenTry(cross, core.MsgChannelOpenTry{{
-    	PortId: {},
-    	Channel: core.Channel{{
-        	State: {},
-        	ConnectionId: core.ConnectionId({}),
-        	CounterpartyChannelId: core.ChannelId({}),
-        	CounterpartyPortId: {},
-        	Version: "{}",
-    	}},
-    	CounterpartyVersion: "{}",
-    	ProofInit: {},
-    	ProofHeight: {},
-	}})
+func main(cur realm) {{
+	core.ChannelOpenTry(cross(cur), core.NewMsgChannelOpenTry(
+    	cross(cur),
+    	{},
+    	core.NewChannel(
+        	cross(cur),
+        	core.ChannelState({}),
+        	core.ConnectionId({}),
+        	core.ChannelId({}),
+        	{},
+        	"{}",
+    	),
+    	"{}",
+    	{},
+    	core.Height({}),
+	))
 }}
                     "#,
                         gno_bytes(&msg.port_id),
@@ -690,14 +695,15 @@ import (
     core "{ibc_core_realm}"
 )
 
-func main() {{
-	core.ChannelOpenAck(cross, core.MsgChannelOpenAck{{
-    	ChannelId: core.ChannelId({}),
-    	CounterpartyVersion: "{}",
-    	CounterpartyChannelId: core.ChannelId({}),
-    	ProofTry: {},
-    	ProofHeight: {},
-	}})
+func main(cur realm) {{
+	core.ChannelOpenAck(cross(cur), core.NewMsgChannelOpenAck(
+    	cross(cur),
+    	core.ChannelId({}),
+    	"{}",
+    	core.ChannelId({}),
+    	{},
+    	core.Height({}),
+	))
 }}
                     "#,
                         msg.channel_id,
@@ -716,12 +722,13 @@ import (
     core "{ibc_core_realm}"
 )
 
-func main() {{
-	core.ChannelOpenConfirm(cross, core.MsgChannelOpenConfirm{{
-    	ChannelId: core.ChannelId({}),
-    	ProofAck: {},
-    	ProofHeight: {},
-	}})
+func main(cur realm) {{
+	core.ChannelOpenConfirm(cross(cur), core.NewMsgChannelOpenConfirm(
+    	cross(cur),
+    	core.ChannelId({}),
+    	{},
+    	core.Height({}),
+	))
 }}
                     "#,
                         msg.channel_id,
@@ -740,13 +747,14 @@ import (
     core "{ibc_core_realm}"
 )
 
-func main() {{
-	core.PacketRecv(cross, core.MsgPacketRecv{{
-    	Packets: []core.Packet{{ {} }},
-    	RelayerMsgs: [][]byte{{ {} }},
-    	Proof: {},
-    	ProofHeight: {},
-	}})
+func main(cur realm) {{
+	core.PacketRecv(cross(cur), core.NewMsgPacketRecv(
+    	cross(cur),
+    	[]core.Packet{{ {} }},
+    	[][]byte{{ {} }},
+    	{},
+    	core.Height({}),
+	))
 }}
                     "#,
                         msg.packets
@@ -772,13 +780,14 @@ import (
     core "{ibc_core_realm}"
 )
 
-func main() {{
-	core.PacketAcknowledgement(cross, core.MsgPacketAcknowledgement{{
-    	Packets: []core.Packet{{ {} }},
-    	Acknowledgements: [][]byte{{ {} }},
-    	Proof: {},
-    	ProofHeight: {},
-	}})
+func main(cur realm) {{
+	core.PacketAcknowledgement(cross(cur), core.NewMsgPacketAcknowledgement(
+    	cross(cur),
+    	[]core.Packet{{ {} }},
+    	[][]byte{{ {} }},
+    	{},
+    	core.Height({}),
+	))
 }}
                     "#,
                         msg.packets
@@ -804,18 +813,20 @@ import (
     core "{ibc_core_realm}"
 )
 
-func main() {{
-	core.PacketTimeout(cross, core.MsgPacketTimeout{{
-    	Packet: core.Packet{{
-        	SourceChannelId: core.ChannelId({}),
-        	DestinationChannelId: core.ChannelId({}),
-        	Data: {},
-        	TimeoutHeight: 0,
-        	TimeoutTimestamp: core.Timestamp({}),
-    	}},
-    	Proof: {},
-    	ProofHeight: {},
-	}})
+func main(cur realm) {{
+	core.PacketTimeout(cross(cur), core.NewMsgPacketTimeout(
+    	cross(cur),
+    	core.NewPacket(
+        	cross(cur),
+        	core.ChannelId({}),
+        	core.ChannelId({}),
+        	{},
+        	core.Height(0),
+        	core.Timestamp({}),
+    	),
+    	{},
+    	core.Height({}),
+	))
 }}
                     "#,
                         msg.packet.source_channel_id,
@@ -883,7 +894,7 @@ fn gno_bytes(bz: impl AsRef<[u8]>) -> String {
 
 fn gno_packet(packet: &Packet) -> String {
     format!(
-        "core.Packet{{ SourceChannelId: core.ChannelId({}), DestinationChannelId: core.ChannelId({}), Data: {}, TimeoutHeight: core.Height(0), TimeoutTimestamp: core.Timestamp({}) }}",
+        "core.NewPacket(cross(cur), core.ChannelId({}), core.ChannelId({}), {}, core.Height(0), core.Timestamp({}))",
         packet.source_channel_id,
         packet.destination_channel_id,
         gno_bytes(&packet.data),
