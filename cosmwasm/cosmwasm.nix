@@ -117,6 +117,7 @@ _: {
             "gno"
             "ethereum"
             "state-lens-ics23-mpt"
+            "trusted-mpt"
           ];
         }
         {
