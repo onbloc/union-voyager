@@ -38,10 +38,10 @@ impl fmt::Display for PartSetHeader {
 
 #[derive(Clone, PartialEq, prost::Message)]
 pub struct CanonicalPartSetHeader {
-    #[prost(bytes, tag = "1")]
+    #[prost(uint32, tag = "1")]
+    pub total: u32,
+    #[prost(bytes, tag = "2")]
     pub hash: Vec<u8>,
-    #[prost(sint32, tag = "2")]
-    pub total: i32,
 }
 
 impl Amino for CanonicalPartSetHeader {
@@ -54,7 +54,7 @@ impl Amino for CanonicalPartSetHeader {
 
 pub fn canonicalize_part_set_header(parts_header: &PartSetHeader) -> CanonicalPartSetHeader {
     CanonicalPartSetHeader {
+        total: parts_header.total,
         hash: parts_header.hash.map_or(Vec::new(), |hash| hash.into()),
-        total: parts_header.total as i32,
     }
 }

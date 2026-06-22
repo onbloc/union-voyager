@@ -473,12 +473,12 @@ mod tests {
     #[test]
     fn verify_works() {
         let header: Header = serde_json::from_str(
-            &fs::read_to_string("testdata/mainnet-header-1008284-1008285.json").unwrap(),
+            &fs::read_to_string("testdata/mainnet-header-381822-381823.json").unwrap(),
         )
         .unwrap();
 
         let trusted_header: SignedHeader = serde_json::from_str(
-            &fs::read_to_string("testdata/mainnet-signed-header-1008284.json").unwrap(),
+            &fs::read_to_string("testdata/mainnet-signed-header-381822.json").unwrap(),
         )
         .unwrap();
 

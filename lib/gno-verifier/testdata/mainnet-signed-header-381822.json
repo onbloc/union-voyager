@@ -1,0 +1,117 @@
+{
+  "header": {
+    "version": "v1.0.0-rc.0",
+    "chain_id": "test-13",
+    "height": "381822",
+    "time": "2026-06-22T04:22:34.273902666Z",
+    "num_txs": "0",
+    "total_txs": "32199",
+    "app_version": "",
+    "last_block_id": {
+      "hash": "la534InDu0y6HJzjzug07S880zNqwrqZFfdpTKFVc3Y=",
+      "parts": {
+        "total": "1",
+        "hash": "5fNHqZ9O/kdPG2W4ZrDCluc6CcscbqStLIs5PEcKpg0="
+      }
+    },
+    "last_commit_hash": "zMyDaQzgHFJchgsQ3IWJJ9EXCkHAyXg5bXsfRtBS9ik=",
+    "data_hash": null,
+    "validators_hash": "AhTu+GfoLroItL1p11oOXx3PiX6IOiKs+yNgd1GEeSM=",
+    "next_validators_hash": "AhTu+GfoLroItL1p11oOXx3PiX6IOiKs+yNgd1GEeSM=",
+    "consensus_hash": "FbaDuQmTJVlL7kHV3wzVYqYndcGaDAYbpldbm+DKjDs=",
+    "app_hash": "IdN4X9ldC8zbcwwVFq9KH751APdDTOO0k6yBpVuV2J8=",
+    "last_results_hash": null,
+    "proposer_address": "g1ahsucf2e2g95n7xufes8mqtuucw5829t044s22"
+  },
+  "commit": {
+    "block_id": {
+      "hash": "v5iPS9ZkpRpz10G1giRjdda4BS1byfY/SKosM8O4AGk=",
+      "parts": {
+        "total": "1",
+        "hash": "4vQRGGoajs8/fW9B5mtbVD1Pm/l3sbdhyg97TCQdZo4="
+      }
+    },
+    "precommits": [
+      {
+        "type": 2,
+        "height": "381822",
+        "round": "0",
+        "block_id": {
+          "hash": "v5iPS9ZkpRpz10G1giRjdda4BS1byfY/SKosM8O4AGk=",
+          "parts": {
+            "total": "1",
+            "hash": "4vQRGGoajs8/fW9B5mtbVD1Pm/l3sbdhyg97TCQdZo4="
+          }
+        },
+        "timestamp": "2026-06-22T04:22:37.775565130Z",
+        "validator_address": "g1zhmw2fzprflze5qfqs8hxm9vdawvmvrejk3z25",
+        "validator_index": "0",
+        "signature": "G1vwm9r/iF9H4N/EGsShdq+u3od0A0Qp7TJnv6Wj0yJJQx2h72qxWNVR4O0BuQNMi9N6/s7iy1Ng4qP2+hEfDA=="
+      },
+      {
+        "type": 2,
+        "height": "381822",
+        "round": "0",
+        "block_id": {
+          "hash": "v5iPS9ZkpRpz10G1giRjdda4BS1byfY/SKosM8O4AGk=",
+          "parts": {
+            "total": "1",
+            "hash": "4vQRGGoajs8/fW9B5mtbVD1Pm/l3sbdhyg97TCQdZo4="
+          }
+        },
+        "timestamp": "2026-06-22T04:22:37.765403340Z",
+        "validator_address": "g15sysd4jcpsw7t0n4ffe2hn8ndfup2ae2vwpves",
+        "validator_index": "1",
+        "signature": "7D0lptmlHVgDaoMp46cmopAHtrmeXhcCx8CIDOeoG2UT64QFX+UtJL2YTko1MLlDKbFDlnvCaWcVqT4MhCSxBA=="
+      },
+      {
+        "type": 2,
+        "height": "381822",
+        "round": "0",
+        "block_id": {
+          "hash": "v5iPS9ZkpRpz10G1giRjdda4BS1byfY/SKosM8O4AGk=",
+          "parts": {
+            "total": "1",
+            "hash": "4vQRGGoajs8/fW9B5mtbVD1Pm/l3sbdhyg97TCQdZo4="
+          }
+        },
+        "timestamp": "2026-06-22T04:22:37.720418624Z",
+        "validator_address": "g1k7asng8uzf74xs0tsrfwytldl76hs4l3asglym",
+        "validator_index": "2",
+        "signature": "PQUTltnXaWNv/BKU9NoOU8icEqVmh0m6c9R9PH3ZrSNTHr+0JuSkydpHPi53c8nqRz5CYcj80mw/6QMyqTAKCw=="
+      },
+      {
+        "type": 2,
+        "height": "381822",
+        "round": "0",
+        "block_id": {
+          "hash": "v5iPS9ZkpRpz10G1giRjdda4BS1byfY/SKosM8O4AGk=",
+          "parts": {
+            "total": "1",
+            "hash": "4vQRGGoajs8/fW9B5mtbVD1Pm/l3sbdhyg97TCQdZo4="
+          }
+        },
+        "timestamp": "2026-06-22T04:22:37.744600984Z",
+        "validator_address": "g1aps0x6mex5t7unajq9wefstxupz3r830m69g68",
+        "validator_index": "3",
+        "signature": "uOVK6eefyoK176b5jB3aEABR8MZjUOEyHkyqh92f7rPKsPpTqdl8uOwLQAwPeDKfBXXbLywo7mgBbx8GfNnSDg=="
+      },
+      {
+        "type": 2,
+        "height": "381822",
+        "round": "0",
+        "block_id": {
+          "hash": "v5iPS9ZkpRpz10G1giRjdda4BS1byfY/SKosM8O4AGk=",
+          "parts": {
+            "total": "1",
+            "hash": "4vQRGGoajs8/fW9B5mtbVD1Pm/l3sbdhyg97TCQdZo4="
+          }
+        },
+        "timestamp": "2026-06-22T04:22:37.768386468Z",
+        "validator_address": "g1ahsucf2e2g95n7xufes8mqtuucw5829t044s22",
+        "validator_index": "4",
+        "signature": "LiGms9yfgu3fjvme1FjVYDbHO1uaVv7v4yjnfYAzs5DJUznG6lepIrQoqWge72OjWh/Zyjlf0VLtgnZ4H4UFAA=="
+      }
+    ]
+  }
+}
