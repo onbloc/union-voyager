@@ -110,7 +110,7 @@ impl Module {
             {{
               GnoEvent: {{
                 type: {{ eq: "PacketSend" }}
-                pkg_path: {{ eq: "gno.land/r/core/ibc/v1/core" }},
+                pkg_path: {{ eq: "gno.land/r/onbloc/ibc/union/core" }},
                 attrs: {{
                   key: {{ eq:"packet_hash" }}
                   value: {{ eq:"{packet_hash}" }}
