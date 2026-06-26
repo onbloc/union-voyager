@@ -141,6 +141,34 @@ impl IbcEvent {
                 .map_err(RpcError::fatal(format!("error parsing value for key {ty}")))
         }
 
+        fn chunked_attr(attrs: &[gno_rpc::types::EventAttribute], ty: &str) -> RpcResult<Bytes> {
+            // packet_data_size is the byte-length of the full "0x"-prefixed hex string
+            // emitted by gno's hexAttr (e.g. len("0x1a2b...") = 2 + n_bytes*2).
+            let hex_str_len: usize = attr(attrs, &format!("{ty}_size"))?;
+
+            // Collect raw chunk strings. gno splits the full "0x<hex>" string into
+            // 1024-char slices, so only chunk[0] carries the "0x" prefix; subsequent
+            // chunks are bare hex continuations.
+            let combined: String = (0..)
+                .map_while(|i| {
+                    attrs
+                        .iter()
+                        .find_map(|a| (a.key == format!("{ty}[{i}]")).then(|| a.value.clone()))
+                })
+                .collect();
+
+            if combined.len() != hex_str_len {
+                return Err(RpcError::fatal_from_message(format!(
+                    "key {ty} incomplete: got {} hex chars, expected {hex_str_len}",
+                    combined.len(),
+                )));
+            }
+
+            combined
+                .parse::<Bytes>()
+                .map_err(RpcError::fatal(format!("error parsing hex for key {ty}")))
+        }
+
         let attrs = gno_event
             .attrs
             .ok_or_else(|| RpcError::fatal_from_message("no attributes on event"))?;
@@ -217,7 +245,7 @@ impl IbcEvent {
             },
             "PacketSend" => IbcEvent::PacketSend {
                 packet_hash: attr(&attrs, "packet_hash")?,
-                packet_data: attr(&attrs, "packet_data")?,
+                packet_data: chunked_attr(&attrs, "packet_data")?,
                 source_channel_id: attr(&attrs, "source_channel_id")?,
                 source_channel_version: attr(&attrs, "source_channel_version")?,
                 source_connection_id: attr(&attrs, "source_connection_id")?,
