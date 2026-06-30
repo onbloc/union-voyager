@@ -142,12 +142,13 @@ impl IbcEvent {
         }
 
         fn chunked_attr(attrs: &[gno_rpc::types::EventAttribute], ty: &str) -> RpcResult<Bytes> {
-            // packet_data_size is the byte-length of the full "0x"-prefixed hex string
-            // emitted by gno's hexAttr (e.g. len("0x1a2b...") = 2 + n_bytes*2).
-            let hex_str_len: usize = attr(attrs, &format!("{ty}_size"))?;
+            // If no _size field is present, the value was emitted as a single plain attribute.
+            let Some(hex_str_len) = attr::<usize>(attrs, &format!("{ty}_size")).ok() else {
+                return attr(attrs, ty);
+            };
 
             // Collect raw chunk strings. gno splits the full "0x<hex>" string into
-            // 1024-char slices, so only chunk[0] carries the "0x" prefix; subsequent
+            // 4096-char slices, so only chunk[0] carries the "0x" prefix; subsequent
             // chunks are bare hex continuations.
             let combined: String = (0..)
                 .map_while(|i| {
