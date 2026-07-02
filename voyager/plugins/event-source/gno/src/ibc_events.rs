@@ -72,15 +72,8 @@ pub enum IbcEvent {
 
     PacketRecv {
         packet_hash: H256,
-        packet_data: Bytes,
-        source_channel_id: ChannelId,
-        source_connection_id: ConnectionId,
-        source_connection_client_id: ClientId,
         destination_channel_id: ChannelId,
-        destination_channel_version: String,
-        destination_connection_id: ConnectionId,
-        destination_connection_client_id: ClientId,
-        timeout_timestamp: Timestamp,
+        maker: String,
         maker_msg: Bytes,
     },
 
@@ -233,15 +226,8 @@ impl IbcEvent {
             "ChannelOpenConfirm" => IbcEvent::ChannelOpenConfirm(parse_channel_event(attrs)?),
             "PacketRecv" => IbcEvent::PacketRecv {
                 packet_hash: attr(&attrs, "packet_hash")?,
-                packet_data: attr(&attrs, "packet_data")?,
-                source_channel_id: attr(&attrs, "source_channel_id")?,
-                source_connection_id: attr(&attrs, "source_connection_id")?,
-                source_connection_client_id: attr(&attrs, "source_connection_client_id")?,
                 destination_channel_id: attr(&attrs, "destination_channel_id")?,
-                destination_channel_version: attr(&attrs, "destination_channel_version")?,
-                destination_connection_id: attr(&attrs, "destination_connection_id")?,
-                destination_connection_client_id: attr(&attrs, "destination_connection_client_id")?,
-                timeout_timestamp: attr(&attrs, "timeout_timestamp")?,
+                maker: attr(&attrs, "maker")?,
                 maker_msg: attr(&attrs, "maker_msg")?,
             },
             "PacketSend" => IbcEvent::PacketSend {
