@@ -261,7 +261,7 @@ impl IbcEvent {
             "PacketAck" => IbcEvent::PacketAck {},
             "WriteAck" => IbcEvent::WriteAck {
                 packet_hash: attr(&attrs, "packet_hash")?,
-                packet_data: attr(&attrs, "packet_data")?,
+                packet_data: chunked_attr(&attrs, "packet_data")?,
                 source_channel_id: attr(&attrs, "source_channel_id")?,
                 source_connection_id: attr(&attrs, "source_connection_id")?,
                 source_connection_client_id: attr(&attrs, "source_connection_client_id")?,
