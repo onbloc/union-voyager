@@ -141,6 +141,35 @@ impl IbcEvent {
                 .map_err(RpcError::fatal(format!("error parsing value for key {ty}")))
         }
 
+        fn chunked_attr(attrs: &[gno_rpc::types::EventAttribute], ty: &str) -> RpcResult<Bytes> {
+            // If no _size field is present, the value was emitted as a single plain attribute.
+            let Some(hex_str_len) = attr::<usize>(attrs, &format!("{ty}_size")).ok() else {
+                return attr(attrs, ty);
+            };
+
+            // Collect raw chunk strings. gno splits the full "0x<hex>" string into
+            // 4096-char slices, so only chunk[0] carries the "0x" prefix; subsequent
+            // chunks are bare hex continuations.
+            let combined: String = (0..)
+                .map_while(|i| {
+                    attrs
+                        .iter()
+                        .find_map(|a| (a.key == format!("{ty}[{i}]")).then(|| a.value.clone()))
+                })
+                .collect();
+
+            if combined.len() != hex_str_len {
+                return Err(RpcError::fatal_from_message(format!(
+                    "key {ty} incomplete: got {} hex chars, expected {hex_str_len}",
+                    combined.len(),
+                )));
+            }
+
+            combined
+                .parse::<Bytes>()
+                .map_err(RpcError::fatal(format!("error parsing hex for key {ty}")))
+        }
+
         let attrs = gno_event
             .attrs
             .ok_or_else(|| RpcError::fatal_from_message("no attributes on event"))?;
@@ -204,7 +233,7 @@ impl IbcEvent {
             "ChannelOpenConfirm" => IbcEvent::ChannelOpenConfirm(parse_channel_event(attrs)?),
             "PacketRecv" => IbcEvent::PacketRecv {
                 packet_hash: attr(&attrs, "packet_hash")?,
-                packet_data: attr(&attrs, "packet_data")?,
+                packet_data: chunked_attr(&attrs, "packet_data")?,
                 source_channel_id: attr(&attrs, "source_channel_id")?,
                 source_connection_id: attr(&attrs, "source_connection_id")?,
                 source_connection_client_id: attr(&attrs, "source_connection_client_id")?,
@@ -217,7 +246,7 @@ impl IbcEvent {
             },
             "PacketSend" => IbcEvent::PacketSend {
                 packet_hash: attr(&attrs, "packet_hash")?,
-                packet_data: attr(&attrs, "packet_data")?,
+                packet_data: chunked_attr(&attrs, "packet_data")?,
                 source_channel_id: attr(&attrs, "source_channel_id")?,
                 source_channel_version: attr(&attrs, "source_channel_version")?,
                 source_connection_id: attr(&attrs, "source_connection_id")?,
@@ -232,7 +261,7 @@ impl IbcEvent {
             "PacketAck" => IbcEvent::PacketAck {},
             "WriteAck" => IbcEvent::WriteAck {
                 packet_hash: attr(&attrs, "packet_hash")?,
-                packet_data: attr(&attrs, "packet_data")?,
+                packet_data: chunked_attr(&attrs, "packet_data")?,
                 source_channel_id: attr(&attrs, "source_channel_id")?,
                 source_connection_id: attr(&attrs, "source_connection_id")?,
                 source_connection_client_id: attr(&attrs, "source_connection_client_id")?,
@@ -241,7 +270,7 @@ impl IbcEvent {
                 destination_connection_id: attr(&attrs, "destination_connection_id")?,
                 destination_connection_client_id: attr(&attrs, "destination_connection_client_id")?,
                 timeout_timestamp: attr(&attrs, "timeout_timestamp")?,
-                acknowledgement: attr(&attrs, "acknowledgement")?,
+                acknowledgement: chunked_attr(&attrs, "acknowledgement")?,
             },
             event => {
                 warn!("unknown event: {event}");
