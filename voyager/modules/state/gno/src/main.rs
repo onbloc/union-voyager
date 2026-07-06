@@ -798,11 +798,11 @@ impl StateModuleServer<IbcUnion> for Module {
     }
 }
 
-// REVIEW: Do I need to do unescaping here?
 fn parse_gno_string_object(s: impl AsRef<str>) -> RpcResult<String> {
-    s.as_ref()
-        .strip_prefix("(\"")
-        .and_then(|s| s.strip_suffix("\" string)"))
-        .map(ToOwned::to_owned)
+    let s = s.as_ref();
+    // Handles both old format ("value" string) and new format
+    // ("value" gno.land/p/.../types.T, nil error)
+    s.strip_prefix("(\"")
+        .and_then(|s| s.find("\" ").map(|end| s[..end].to_owned()))
         .ok_or(RpcError::fatal_from_message("invalid string object"))
 }
