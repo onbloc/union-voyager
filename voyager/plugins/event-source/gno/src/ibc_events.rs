@@ -242,7 +242,7 @@ impl IbcEvent {
                 destination_connection_id: attr(&attrs, "destination_connection_id")?,
                 destination_connection_client_id: attr(&attrs, "destination_connection_client_id")?,
                 timeout_timestamp: attr(&attrs, "timeout_timestamp")?,
-                maker_msg: attr(&attrs, "maker_msg")?,
+                maker_msg: chunked_attr(&attrs, "maker_msg")?,
             },
             "PacketSend" => IbcEvent::PacketSend {
                 packet_hash: attr(&attrs, "packet_hash")?,
