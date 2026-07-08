@@ -181,10 +181,18 @@ impl Module {
                 RpcError::fatal_from_message("block height in graphql response is not a u64")
             })?;
 
-        let raw_event = res
-            .pointer("/data/getTransactions/0/response/events/0")
+        let events = res
+            .pointer("/data/getTransactions/0/response/events")
+            .and_then(Value::as_array)
             .ok_or_else(|| {
                 RpcError::fatal_from_message("no response events in graphql response")
+            })?;
+
+        let raw_event = events
+            .iter()
+            .find(|event| event.pointer("/type").and_then(Value::as_str) == Some("PacketSend"))
+            .ok_or_else(|| {
+                RpcError::fatal_from_message("no PacketSend event in graphql response")
             })?;
 
         let event = serde_json::from_value(raw_event.clone())
