@@ -1,0 +1,26 @@
+warning: Git tree '/Users/notjoon/union-voyager' is dirty
+warning: ignoring untrusted flake configuration setting 'extra-substituters'.
+Pass '--accept-flake-config' to trust it
+warning: ignoring untrusted flake configuration setting 'extra-trusted-public-keys'.
+Pass '--accept-flake-config' to trust it
+error:
+       … while calling the 'derivationStrict' builtin
+         at «nix-internal»/derivation-internal.nix:37:12:
+           36|
+           37|   strict = derivationStrict drvAttrs;
+             |            ^
+           38|
+
+       … while evaluating derivation 'voyager-modules-plugins'
+         whose name attribute is located at «github:NixOS/nixpkgs/27cc9ff7ddd91ad569b289094daa32d633c01b2d?narHash=sha256-AYQg2eTjw2hzqQfvoAsIdXWGr4V/VY8u87WoaiazA2g%3D»/pkgs/stdenv/generic/make-derivation.nix:336:7
+
+       … while evaluating attribute 'paths' of derivation 'voyager-modules-plugins'
+         at /Users/notjoon/union-voyager/voyager/voyager.nix:81:19:
+           80|                   name = "voyager-modules-plugins";
+           81|                   paths = pkgs.lib.mapAttrsToList (_: path: if release then path.release else path) (
+             |                   ^
+           82|                     builtins.foldl' (
+
+       (stack trace truncated; use '--show-trace' to show the full, detailed trace)
+
+       error: darwin.apple_sdk_11_0 has been removed as it was a legacy compatibility stub; see <https://nixos.org/manual/nixpkgs/stable/#sec-darwin-legacy-frameworks> for migration instructions

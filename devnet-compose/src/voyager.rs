@@ -30,7 +30,7 @@ pub fn migrations_process() -> Process {
         name: name.clone(),
         disabled: None,
         is_daemon: None,
-        command: "RUST_LOG=debug nix run -L .#voyager -- -c ./voyager-config.json run-migrations"
+        command: "VOYAGER_CONFIG=${VOYAGER_CONFIG:-./voyager-config.json}; RUST_LOG=debug nix run -L .#voyager -- -c \"$VOYAGER_CONFIG\" run-migrations"
             .into(),
         depends_on: Some(HashMap::from([(
             queue_process().name,
@@ -63,7 +63,7 @@ pub fn relay_process(networks: &[Network]) -> Process {
         name: name.clone(),
         disabled: None,
         is_daemon: None,
-        command: "RUST_LOG=info nix run -L .#voyager -- -c ./voyager-config.json relay".into(),
+        command: "VOYAGER_CONFIG=${VOYAGER_CONFIG:-./voyager-config.json}; RUST_LOG=info nix run -L .#voyager -- -c \"$VOYAGER_CONFIG\" relay".into(),
         depends_on: Some(depends_on),
         liveliness_probe: None,
         readiness_probe: Some(Probe::http_get(65534, "/health")),

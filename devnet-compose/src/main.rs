@@ -27,10 +27,29 @@ pub enum Network {
     Osmosis,
     Stargaze,
     Simd,
+    Gno,
 }
 
 impl Network {
     fn to_process(self) -> Process {
+        if self == Network::Gno {
+            return Process {
+                name: self.network_id().clone(),
+                command: "GNO_IBC_DIR=${GNO_IBC_DIR:-/Users/notjoon/gno-ibc}; docker compose -f \"$GNO_IBC_DIR/e2e/union/docker-compose.yml\" up --build gno tx-indexer".into(),
+                is_daemon: None,
+                disabled: None,
+                depends_on: None,
+                liveliness_probe: None,
+                readiness_probe: Some(Probe::exec(
+                    r#"curl -fsS http://127.0.0.1:16657/status >/dev/null && curl -fsS -H 'content-type: application/json' -d '{"query":"{ latestBlockHeight }"}' http://127.0.0.1:48546/graphql/query >/dev/null"#,
+                )),
+                log_configuration: LogConfiguration::default(),
+                log_location: log_path(&self.network_id()),
+                shutdown: ShutdownConfig::default(),
+                availability: Some(RestartPolicy::always(10)),
+            };
+        }
+
         Process {
             name: self.network_id().clone(),
             command: format!("nix run .#{}", self.network_id()),
@@ -57,14 +76,15 @@ impl Network {
             Network::Stargaze => 26757,
             Network::Osmosis => 26857,
             Network::Simd => 26957,
+            Network::Gno => 16657,
         }
     }
 
     fn cometbls_light_client_config(&self) -> String {
         // TODO: this is a bit hacky, well need better Network types rather than an assertion here.
         assert!(
-            self != &Network::Union,
-            "Tried to get cometbls client id on union"
+            !matches!(self, Network::Union | Network::Gno),
+            "Tried to get cometbls client id on {self}"
         );
         let cometbls_lightclient_checksum = fs::read_to_string(format!(
             "./.devnet/homes/{}/code-ids/cometbls_light_client",
@@ -93,6 +113,7 @@ pub fn connection_to_process((net_a, net_b): &(Network, Network)) -> Process {
     );
 
     let (client_a_config, client_b_config) = match (net_a, net_b) {
+        (Union, Gno) | (Gno, Union) => ("null".to_string(), "null".to_string()),
         (Union, n) => ("null".to_string(), n.cometbls_light_client_config()),
         (n, Union) => (n.cometbls_light_client_config(), "null".to_string()),
         (_, _) => ("null".to_string(), "null".to_string()),
@@ -103,7 +124,7 @@ pub fn connection_to_process((net_a, net_b): &(Network, Network)) -> Process {
         disabled: None,
         is_daemon: Some(true),
         command: format!(
-            "set -o pipefail; nix run .#voyager -- queue enqueue \"$(nix run -L .#voyager -- -c ./voyager-config.json handshake {} {} --client-a-config {} --client-b-config {} --create-clients --open-connection --connection-ordering unordered --init-fetch)\"",
+            "set -o pipefail; VOYAGER_CONFIG=${{VOYAGER_CONFIG:-./voyager-config.json}}; nix run .#voyager -- queue enqueue \"$(nix run -L .#voyager -- -c \"$VOYAGER_CONFIG\" handshake {} {} --client-a-config {} --client-b-config {} --create-clients --open-connection --connection-ordering unordered --init-fetch)\"",
             net_a.network_id(),
             net_b.network_id(),
             client_a_config,
@@ -168,6 +189,7 @@ fn main() {
         .item(Osmosis, "Osmosis", "")
         .item(Stargaze, "Stargaze", "")
         .item(Simd, "Simd", "")
+        .item(Gno, "Gno", "uses gno-ibc/e2e/union docker compose")
         .interact()
         .unwrap();
 

@@ -102,7 +102,13 @@ impl<'de> serde::Deserialize<'de> for Rev {
 }
 
 #[cfg_attr(
-    not(target_arch = "wasm32"),
+    all(not(target_arch = "wasm32"), target_vendor = "apple"),
+    unsafe(no_mangle),
+    used,
+    unsafe(link_section = "__DATA,__git_rev")
+)]
+#[cfg_attr(
+    all(not(target_arch = "wasm32"), not(target_vendor = "apple")),
     unsafe(no_mangle),
     used,
     unsafe(link_section = ".note.embed_commit.GIT_REV")
