@@ -1099,7 +1099,6 @@ impl Module {
             IbcEvent::PacketRecv {
                 packet_hash,
                 destination_channel_id,
-                maker: _,
                 maker_msg,
             } => {
                 let destination_channel = voyager_client

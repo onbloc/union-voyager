@@ -73,7 +73,6 @@ pub enum IbcEvent {
     PacketRecv {
         packet_hash: H256,
         destination_channel_id: ChannelId,
-        maker: String,
         maker_msg: Bytes,
     },
 
@@ -227,7 +226,6 @@ impl IbcEvent {
             "PacketRecv" => IbcEvent::PacketRecv {
                 packet_hash: attr(&attrs, "packet_hash")?,
                 destination_channel_id: attr(&attrs, "destination_channel_id")?,
-                maker: attr(&attrs, "maker")?,
                 maker_msg: chunked_attr(&attrs, "maker_msg")?,
             },
             "PacketSend" => IbcEvent::PacketSend {
