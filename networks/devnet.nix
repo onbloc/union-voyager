@@ -28,7 +28,7 @@
         chainName = "union";
         denom = "au";
         keyType = "bn254";
-        validatorCount = 4;
+        validatorCount = 1;
         sdkVersion = 50;
         genesisOverwrites = {
           consensus.params = {

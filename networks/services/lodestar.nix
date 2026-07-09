@@ -81,7 +81,7 @@ in
           # dockerTools only preserves Env from the base "fromImage"
           # this is directly coming from https://github.com/ChainSafe/lodestar/blob/402c46f0d9f1f964066efb3e0e53863d6a913a80/Dockerfile#L39
           WorkingDir = "/usr/app";
-          Entrypoint = pkgs.lib.meta.getExe lodestar-init;
+          Entrypoint = [ (pkgs.lib.meta.getExe lodestar-init) ];
         };
       }
     );

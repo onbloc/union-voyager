@@ -78,7 +78,7 @@ impl Module {
 
         // TODO: Query from the chain properly, see: https://github.com/gnolang/gno/issues/4829
 
-        Duration::from_hours(24 * 3)
+        Duration::from_secs(60 * 60 * 24 * 3)
     }
 }
 

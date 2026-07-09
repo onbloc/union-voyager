@@ -24,7 +24,7 @@ use tracing::{debug, error, info, info_span, instrument, trace, warn};
 use unionlabs::{
     self, ErrorReporter,
     never::Never,
-    primitives::{Bech32, Bytes, H160, encoding::HexPrefixed},
+    primitives::{Bech32, H160, encoding::HexPrefixed},
 };
 use voyager_sdk::{
     DefaultCmd,
@@ -212,13 +212,7 @@ impl Module {
                 let memo = format!("Voyager {}", env!("CARGO_PKG_VERSION"));
 
                 let ibc_core_realm = self.ibc_core_realm.clone();
-                let msgs = process_msgs(
-                    msgs,
-                    signer,
-                    ibc_core_realm,
-                    // self.fee_recipient.as_ref(),
-                    None,
-                );
+                let msgs = process_msgs(msgs, signer, ibc_core_realm, self.fee_recipient.as_ref());
 
                 let msgs = msgs
                     .into_iter()
@@ -470,7 +464,7 @@ fn process_msgs(
     msgs: Vec<IbcMessage>,
     signer: &LocalSigner,
     ibc_core_realm: String,
-    fee_recipient: Option<&Bech32<Bytes>>,
+    fee_recipient: Option<&Bech32<H160>>,
 ) -> Vec<RpcResult<(IbcMessage, Msg)>> {
     msgs.into_iter()
         .map(|IbcMessage::IbcUnion(msg)| {
@@ -486,22 +480,20 @@ package main
 
 import (
     core "{ibc_core_realm}"
+    types "gno.land/p/onbloc/ibc/union/types"
 )
 
-func main() {{
-	id := core.CreateClient(cross, core.MsgCreateClient{{
-    	ClientType: "{}",
-    	ClientStateBytes: {},
-    	ConsensusStateBytes: {},
-    	// Relayer: = {},
-	}})
-	println(id)
+func main(cur realm) {{
+	core.CreateClient(cross(cur), types.NewMsgCreateClient(
+        "{}",
+	{},
+	{},
+	))
 }}
                     "#,
                         msg.client_type,
                         gno_bytes(&msg.client_state_bytes),
                         gno_bytes(&msg.consensus_state_bytes),
-                        relayer,
                     )
                 }
                 Datagram::UpdateClient(msg) => {
@@ -511,20 +503,18 @@ package main
 
 import (
     core "{ibc_core_realm}"
+    types "gno.land/p/onbloc/ibc/union/types"
 )
 
-func main() {{
-	height := core.UpdateClient(cross, core.MsgUpdateClient{{
-    	ClientId: core.ClientId({}),
-    	ClientMessage: {},
-    	// Relayer: {},
-	}})
-	println(height)
+func main(cur realm) {{
+	core.UpdateClient(cross(cur), types.NewMsgUpdateClient(
+	types.ClientId({}),
+	{},
+	))
 }}
                     "#,
                         msg.client_id,
                         gno_bytes(&msg.client_message),
-                        relayer,
                     )
                 }
                 Datagram::ConnectionOpenInit(msg) => {
@@ -534,14 +524,14 @@ package main
 
 import (
     core "{ibc_core_realm}"
+    types "gno.land/p/onbloc/ibc/union/types"
 )
 
-func main() {{
-	height := core.ConnectionOpenInit(cross, core.MsgConnectionOpenInit{{
-    	ClientId: core.ClientId({}),
-    	CounterpartyClientId: core.ClientId({}),
-	}})
-	println(height)
+func main(cur realm) {{
+	core.ConnectionOpenInit(cross(cur), types.NewMsgConnectionOpenInit(
+	types.ClientId({}),
+	types.ClientId({}),
+	))
 }}
                     "#,
                         msg.client_id, msg.counterparty_client_id,
@@ -554,16 +544,17 @@ package main
 
 import (
     core "{ibc_core_realm}"
+    types "gno.land/p/onbloc/ibc/union/types"
 )
 
-func main() {{
-	core.ConnectionOpenTry(cross, core.MsgConnectionOpenTry{{
-    	ClientId: core.ClientId({}),
-    	CounterpartyClientId: core.ClientId({}),
-    	CounterpartyConnectionId: core.ConnectionId({}),
-    	ProofInit: {},
-    	ProofHeight: core.Height({}),
-	}})
+func main(cur realm) {{
+	core.ConnectionOpenTry(cross(cur), types.NewMsgConnectionOpenTry(
+	types.ClientId({}),
+	types.ClientId({}),
+	types.ConnectionId({}),
+	{},
+	{},
+	))
 }}
                     "#,
                         msg.client_id,
@@ -580,15 +571,16 @@ package main
 
 import (
     core "{ibc_core_realm}"
+    types "gno.land/p/onbloc/ibc/union/types"
 )
 
-func main() {{
-	core.ConnectionOpenAck(cross, core.MsgConnectionOpenAck{{
-    	ConnectionId: core.ConnectionId({}),
-    	CounterpartyConnectionId: core.ConnectionId({}),
-    	ProofTry: {},
-    	ProofHeight: core.Height({}),
-	}})
+func main(cur realm) {{
+	core.ConnectionOpenAck(cross(cur), types.NewMsgConnectionOpenAck(
+	types.ConnectionId({}),
+	types.ConnectionId({}),
+	{},
+	{},
+	))
 }}
                     "#,
                         msg.connection_id,
@@ -604,14 +596,15 @@ package main
 
 import (
     core "{ibc_core_realm}"
+    types "gno.land/p/onbloc/ibc/union/types"
 )
 
-func main() {{
-	core.ConnectionOpenConfirm(cross, core.MsgConnectionOpenConfirm{{
-    	ConnectionId: core.ConnectionId({}),
-    	ProofAck: {},
-    	ProofHeight: core.Height({}),
-	}})
+func main(cur realm) {{
+	core.ConnectionOpenConfirm(cross(cur), types.NewMsgConnectionOpenConfirm(
+	types.ConnectionId({}),
+	{},
+	{},
+	))
 }}
                     "#,
                         msg.connection_id,
@@ -626,21 +619,24 @@ package main
 
 import (
     core "{ibc_core_realm}"
+    types "gno.land/p/onbloc/ibc/union/types"
 )
 
-func main() {{
-	core.ChannelOpenInit(cross, core.MsgChannelOpenInit{{
-    	PortId: {},
-    	CounterpartyPortId: {},
-    	ConnectionId: {},
-    	Version: "{}",
-	}})
+func main(cur realm) {{
+	core.ChannelOpenInit(cross(cur), types.NewMsgChannelOpenInit(
+	{},
+	{},
+	types.ConnectionId({}),
+	"{}",
+	"{}",
+	))
 }}
                     "#,
                         gno_bytes(&msg.port_id),
                         gno_bytes(&msg.counterparty_port_id),
                         msg.connection_id,
                         msg.version,
+                        relayer,
                     )
                 }
                 Datagram::ChannelOpenTry(msg) => {
@@ -650,22 +646,24 @@ package main
 
 import (
     core "{ibc_core_realm}"
+    types "gno.land/p/onbloc/ibc/union/types"
 )
 
-func main() {{
-	core.ChannelOpenTry(cross, core.MsgChannelOpenTry{{
-    	PortId: {},
-    	Channel: core.Channel{{
-        	State: {},
-        	ConnectionId: core.ConnectionId({}),
-        	CounterpartyChannelId: core.ChannelId({}),
-        	CounterpartyPortId: {},
-        	Version: "{}",
-    	}},
-    	CounterpartyVersion: "{}",
-    	ProofInit: {},
-    	ProofHeight: {},
-	}})
+func main(cur realm) {{
+	core.ChannelOpenTry(cross(cur), types.NewMsgChannelOpenTry(
+	{},
+	types.NewChannel(
+	types.ChannelState({}),
+	types.ConnectionId({}),
+	types.ChannelId({}),
+	{},
+	"{}",
+	),
+	"{}",
+	{},
+	{},
+	"{}",
+	))
 }}
                     "#,
                         gno_bytes(&msg.port_id),
@@ -679,6 +677,7 @@ func main() {{
                         msg.counterparty_version,
                         gno_bytes(&msg.proof_init),
                         msg.proof_height,
+                        relayer,
                     )
                 }
                 Datagram::ChannelOpenAck(msg) => {
@@ -688,16 +687,18 @@ package main
 
 import (
     core "{ibc_core_realm}"
+    types "gno.land/p/onbloc/ibc/union/types"
 )
 
-func main() {{
-	core.ChannelOpenAck(cross, core.MsgChannelOpenAck{{
-    	ChannelId: core.ChannelId({}),
-    	CounterpartyVersion: "{}",
-    	CounterpartyChannelId: core.ChannelId({}),
-    	ProofTry: {},
-    	ProofHeight: {},
-	}})
+func main(cur realm) {{
+	core.ChannelOpenAck(cross(cur), types.NewMsgChannelOpenAck(
+	types.ChannelId({}),
+	"{}",
+	types.ChannelId({}),
+	{},
+	{},
+	"{}",
+	))
 }}
                     "#,
                         msg.channel_id,
@@ -705,6 +706,7 @@ func main() {{
                         msg.counterparty_channel_id,
                         gno_bytes(&msg.proof_try),
                         msg.proof_height,
+                        relayer,
                     )
                 }
                 Datagram::ChannelOpenConfirm(msg) => {
@@ -714,19 +716,22 @@ package main
 
 import (
     core "{ibc_core_realm}"
+    types "gno.land/p/onbloc/ibc/union/types"
 )
 
-func main() {{
-	core.ChannelOpenConfirm(cross, core.MsgChannelOpenConfirm{{
-    	ChannelId: core.ChannelId({}),
-    	ProofAck: {},
-    	ProofHeight: {},
-	}})
+func main(cur realm) {{
+	core.ChannelOpenConfirm(cross(cur), types.NewMsgChannelOpenConfirm(
+	types.ChannelId({}),
+	{},
+	{},
+	"{}",
+	))
 }}
                     "#,
                         msg.channel_id,
                         gno_bytes(&msg.proof_ack),
                         msg.proof_height,
+                        relayer,
                     )
                 }
                 Datagram::ChannelCloseInit(_msg) => todo!(),
@@ -738,15 +743,16 @@ package main
 
 import (
     core "{ibc_core_realm}"
+    types "gno.land/p/onbloc/ibc/union/types"
 )
 
-func main() {{
-	core.PacketRecv(cross, core.MsgPacketRecv{{
-    	Packets: []core.Packet{{ {} }},
-    	RelayerMsgs: [][]byte{{ {} }},
-    	Proof: {},
-    	ProofHeight: {},
-	}})
+func main(cur realm) {{
+	core.PacketRecv(cross(cur), types.NewMsgPacketRecv(
+	[]types.Packet{{ {} }},
+	[][]byte{{ {} }},
+	{},
+	{},
+	))
 }}
                     "#,
                         msg.packets
@@ -770,15 +776,16 @@ package main
 
 import (
     core "{ibc_core_realm}"
+    types "gno.land/p/onbloc/ibc/union/types"
 )
 
-func main() {{
-	core.PacketAcknowledgement(cross, core.MsgPacketAcknowledgement{{
-    	Packets: []core.Packet{{ {} }},
-    	Acknowledgements: [][]byte{{ {} }},
-    	Proof: {},
-    	ProofHeight: {},
-	}})
+func main(cur realm) {{
+	core.PacketAcknowledgement(cross(cur), types.NewMsgPacketAcknowledgement(
+	[]types.Packet{{ {} }},
+	[][]byte{{ {} }},
+	{},
+	{},
+	))
 }}
                     "#,
                         msg.packets
@@ -802,20 +809,20 @@ package main
 
 import (
     core "{ibc_core_realm}"
+    types "gno.land/p/onbloc/ibc/union/types"
 )
 
-func main() {{
-	core.PacketTimeout(cross, core.MsgPacketTimeout{{
-    	Packet: core.Packet{{
-        	SourceChannelId: core.ChannelId({}),
-        	DestinationChannelId: core.ChannelId({}),
-        	Data: {},
-        	TimeoutHeight: 0,
-        	TimeoutTimestamp: core.Timestamp({}),
-    	}},
-    	Proof: {},
-    	ProofHeight: {},
-	}})
+func main(cur realm) {{
+	core.PacketTimeout(cross(cur), types.NewMsgPacketTimeout(
+	types.NewPacket(
+	types.ChannelId({}),
+	types.ChannelId({}),
+	{},
+	types.Timestamp({}),
+	),
+	{},
+	{},
+	))
 }}
                     "#,
                         msg.packet.source_channel_id,
@@ -883,7 +890,7 @@ fn gno_bytes(bz: impl AsRef<[u8]>) -> String {
 
 fn gno_packet(packet: &Packet) -> String {
     format!(
-        "core.Packet{{ SourceChannelId: core.ChannelId({}), DestinationChannelId: core.ChannelId({}), Data: {}, TimeoutHeight: core.Height(0), TimeoutTimestamp: core.Timestamp({}) }}",
+        "types.NewPacket(types.ChannelId({}), types.ChannelId({}), {}, types.Timestamp({}))",
         packet.source_channel_id,
         packet.destination_channel_id,
         gno_bytes(&packet.data),

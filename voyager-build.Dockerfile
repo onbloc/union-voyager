@@ -1,8 +1,8 @@
 # Build union-voyager in Linux environment
 # Build context should be the union-voyager directory
-# Rust 1.88+ required by home@0.5.12 and reth-ipc@1.9.3
-# Use latest nightly from rustlang/rust
-FROM rustlang/rust:nightly-bookworm AS builder
+# Rust 1.90 stable avoids nightly-only regressions in transitive crates.
+FROM rust:1.90-bookworm AS builder
+ENV RUSTC_BOOTSTRAP=1
 
 WORKDIR /build
 
@@ -17,21 +17,40 @@ RUN apt-get update && apt-get install -y \
 # Copy source (build context is union-voyager root)
 COPY . .
 
-# Build voyager binary
-RUN cargo build --release --bin voyager
+# Build only binaries used by e2e/union/voyager-config.gno-union.jsonc.
+RUN cargo build --release -j1 \
+    -p voyager \
+    -p voyager-state-module-cosmwasm \
+    -p voyager-state-module-gno \
+    -p voyager-proof-module-cosmwasm \
+    -p voyager-proof-module-gno \
+    -p voyager-finality-module-cometbls \
+    -p voyager-finality-module-gno \
+    -p voyager-client-module-cometbls \
+    -p voyager-client-module-gno \
+    -p voyager-client-bootstrap-module-cometbls \
+    -p voyager-client-bootstrap-module-gno \
+    -p voyager-event-source-plugin-cosmwasm \
+    -p voyager-event-source-plugin-gno \
+    -p voyager-transaction-plugin-cosmos \
+    -p voyager-transaction-plugin-gno \
+    -p voyager-plugin-transaction-batch \
+    -p voyager-client-update-plugin-cometbls \
+    -p voyager-client-update-plugin-gno \
+    -p voyager-plugin-packet-timeout
 
-# Output stage - copy binary to output directory
-FROM alpine:3.21
-RUN mkdir -p /output
-COPY --from=builder /build/target/release/voyager /output/voyager
-# Also copy modules/plugins for convenience
+# Output stage - use debian for glibc compatibility
+FROM debian:bookworm-slim
 RUN mkdir -p /output/modules && mkdir -p /output/plugins
-COPY --from=builder /build/target/debug/voyager-state-module-* /output/modules/
-COPY --from=builder /build/target/debug/voyager-proof-module-* /output/modules/
-COPY --from=builder /build/target/debug/voyager-finality-module-* /output/modules/
-COPY --from=builder /build/target/debug/voyager-client-module-* /output/modules/
-COPY --from=builder /build/target/debug/voyager-client-bootstrap-module-* /output/modules/
-COPY --from=builder /build/target/debug/voyager-event-source-plugin-* /output/plugins/
-COPY --from=builder /build/target/debug/voyager-transaction-plugin-* /output/plugins/
-COPY --from=builder /build/target/debug/voyager-client-update-plugin-* /output/plugins/
-COPY --from=builder /build/target/debug/voyager-plugin-* /output/plugins/
+# Copy voyager binary
+COPY --from=builder /build/target/release/voyager /output/voyager
+# Copy modules/plugins from release build
+COPY --from=builder /build/target/release/voyager-state-module-* /output/modules/
+COPY --from=builder /build/target/release/voyager-proof-module-* /output/modules/
+COPY --from=builder /build/target/release/voyager-finality-module-* /output/modules/
+COPY --from=builder /build/target/release/voyager-client-module-* /output/modules/
+COPY --from=builder /build/target/release/voyager-client-bootstrap-module-* /output/modules/
+COPY --from=builder /build/target/release/voyager-event-source-plugin-* /output/plugins/
+COPY --from=builder /build/target/release/voyager-transaction-plugin-* /output/plugins/
+COPY --from=builder /build/target/release/voyager-client-update-plugin-* /output/plugins/
+COPY --from=builder /build/target/release/voyager-plugin-* /output/plugins/

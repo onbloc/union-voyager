@@ -34,7 +34,7 @@ in
     ports = [
       "5432:5432"
     ];
-    command = "postgres -c shared_buffers=1024MB -c effective_cache_size=2048MB";
+    command = "postgres -c shared_buffers=128MB -c effective_cache_size=256MB";
     environment = {
       POSTGRES_PASSWORD = "postgrespassword";
       POSTGRES_DB = "default";

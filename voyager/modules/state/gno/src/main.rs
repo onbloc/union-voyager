@@ -802,7 +802,28 @@ impl StateModuleServer<IbcUnion> for Module {
 fn parse_gno_string_object(s: impl AsRef<str>) -> RpcResult<String> {
     s.as_ref()
         .strip_prefix("(\"")
-        .and_then(|s| s.strip_suffix("\" string)"))
-        .map(ToOwned::to_owned)
+        .and_then(|s| s.strip_suffix(')'))
+        .and_then(|s| s.rsplit_once("\" "))
+        .and_then(|(value, ty)| (!ty.is_empty()).then(|| value.to_owned()))
         .ok_or(RpcError::fatal_from_message("invalid string object"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_gno_builtin_string_object() {
+        let parsed = parse_gno_string_object(r#"("cometbls" string)"#);
+
+        assert!(matches!(parsed.as_deref(), Ok("cometbls")));
+    }
+
+    #[test]
+    fn parse_gno_string_alias_object() {
+        let parsed =
+            parse_gno_string_object(r#"("cometbls" gno.land/p/onbloc/ibc/union/types.ClientType)"#);
+
+        assert!(matches!(parsed.as_deref(), Ok("cometbls")));
+    }
 }
