@@ -141,6 +141,31 @@ impl IbcEvent {
                 .map_err(RpcError::fatal(format!("error parsing value for key {ty}")))
         }
 
+        fn packet_data(attrs: &[gno_rpc::types::EventAttribute]) -> RpcResult<Bytes> {
+            if let Ok(packet_data) = attr(attrs, "packet_data") {
+                return Ok(packet_data);
+            }
+
+            let mut data = String::new();
+            for i in 0.. {
+                match attrs
+                    .iter()
+                    .find(|a| a.key == format!("packet_data[{i}]"))
+                    .map(|a| &a.value)
+                {
+                    Some(part) if i == 0 => data.push_str(part),
+                    Some(part) => data.push_str(part.strip_prefix("0x").unwrap_or(part)),
+                    None if i == 0 => {
+                        return Err(RpcError::fatal_from_message("key packet_data not found"));
+                    }
+                    None => break,
+                }
+            }
+
+            data.parse()
+                .map_err(RpcError::fatal("error parsing value for key packet_data"))
+        }
+
         let attrs = gno_event
             .attrs
             .ok_or_else(|| RpcError::fatal_from_message("no attributes on event"))?;
@@ -204,7 +229,7 @@ impl IbcEvent {
             "ChannelOpenConfirm" => IbcEvent::ChannelOpenConfirm(parse_channel_event(attrs)?),
             "PacketRecv" => IbcEvent::PacketRecv {
                 packet_hash: attr(&attrs, "packet_hash")?,
-                packet_data: attr(&attrs, "packet_data")?,
+                packet_data: packet_data(&attrs)?,
                 source_channel_id: attr(&attrs, "source_channel_id")?,
                 source_connection_id: attr(&attrs, "source_connection_id")?,
                 source_connection_client_id: attr(&attrs, "source_connection_client_id")?,
@@ -217,7 +242,7 @@ impl IbcEvent {
             },
             "PacketSend" => IbcEvent::PacketSend {
                 packet_hash: attr(&attrs, "packet_hash")?,
-                packet_data: attr(&attrs, "packet_data")?,
+                packet_data: packet_data(&attrs)?,
                 source_channel_id: attr(&attrs, "source_channel_id")?,
                 source_channel_version: attr(&attrs, "source_channel_version")?,
                 source_connection_id: attr(&attrs, "source_connection_id")?,
@@ -232,7 +257,7 @@ impl IbcEvent {
             "PacketAck" => IbcEvent::PacketAck {},
             "WriteAck" => IbcEvent::WriteAck {
                 packet_hash: attr(&attrs, "packet_hash")?,
-                packet_data: attr(&attrs, "packet_data")?,
+                packet_data: packet_data(&attrs)?,
                 source_channel_id: attr(&attrs, "source_channel_id")?,
                 source_connection_id: attr(&attrs, "source_connection_id")?,
                 source_connection_client_id: attr(&attrs, "source_connection_client_id")?,
@@ -269,5 +294,64 @@ impl IbcEvent {
             IbcEvent::PacketAck { .. } => "acknowledge_packet",
             IbcEvent::WriteAck { .. } => "write_ack",
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::IbcEvent;
+    use gno_rpc::types::{EventAttribute, event::TmEvent};
+
+    fn packet_send(attrs: &[(&str, &str)]) -> IbcEvent {
+        IbcEvent::from_gno_event(TmEvent {
+            ty: "PacketSend".into(),
+            pkg_path: "gno.land/r/onbloc/ibc/union/core".into(),
+            attrs: Some(
+                [
+                    (
+                        "packet_hash",
+                        "0x0000000000000000000000000000000000000000000000000000000000000000",
+                    ),
+                    ("source_channel_id", "1"),
+                    ("source_channel_version", "ucs03-zkgm-0"),
+                    ("source_connection_id", "1"),
+                    ("source_connection_client_id", "1"),
+                    ("destination_channel_id", "1"),
+                    ("destination_connection_id", "1"),
+                    ("destination_connection_client_id", "1"),
+                    ("timeout_timestamp", "1"),
+                ]
+                .into_iter()
+                .chain(attrs.iter().copied())
+                .map(|(key, value)| EventAttribute {
+                    key: key.into(),
+                    value: value.into(),
+                })
+                .collect(),
+            ),
+        })
+        .unwrap()
+        .unwrap()
+    }
+
+    #[test]
+    fn parses_packet_send_single_packet_data_attr() {
+        let IbcEvent::PacketSend { packet_data, .. } = packet_send(&[("packet_data", "0x0102")])
+        else {
+            panic!("expected PacketSend");
+        };
+
+        assert_eq!(packet_data.to_string(), "0x0102");
+    }
+
+    #[test]
+    fn parses_packet_send_chunked_packet_data_attrs() {
+        let IbcEvent::PacketSend { packet_data, .. } =
+            packet_send(&[("packet_data[0]", "0x0102"), ("packet_data[1]", "0x0304")])
+        else {
+            panic!("expected PacketSend");
+        };
+
+        assert_eq!(packet_data.to_string(), "0x01020304");
     }
 }
