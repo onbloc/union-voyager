@@ -108,9 +108,9 @@ impl Module {
               }}
           	}}
             {{
-              GnoEvent: {{
-                type: {{ eq: "PacketSend" }}
-                pkg_path: {{ eq: "gno.land/r/core/ibc/v1/core" }},
+                GnoEvent: {{
+                  type: {{ eq: "PacketSend" }}
+                pkg_path: {{ eq: "{}" }},
                 attrs: {{
                   key: {{ eq:"packet_hash" }}
                   value: {{ eq:"{packet_hash}" }}
@@ -138,7 +138,7 @@ impl Module {
     }}
   }}
 }}"#,
-            self.ibc_core_realm
+            self.ibc_core_realm, self.ibc_core_realm
         );
 
         println!("{query}");
