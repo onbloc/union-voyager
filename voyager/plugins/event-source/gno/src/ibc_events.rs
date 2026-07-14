@@ -68,11 +68,21 @@ pub enum IbcEvent {
     },
 
     // TODO
-    BatchSend {},
+    BatchSend {
+        packet_hash: H256,
+        batch_hash: H256,
+        channel_id: ChannelId,
+    },
 
     PacketRecv {
         packet_hash: H256,
-        packet_data: Bytes,
+        destination_channel_id: ChannelId,
+        maker_msg: Bytes,
+    },
+
+    // TODO
+    PacketAck {
+        packet_hash: H256,
         source_channel_id: ChannelId,
         source_connection_id: ConnectionId,
         source_connection_client_id: ClientId,
@@ -81,11 +91,9 @@ pub enum IbcEvent {
         destination_connection_id: ConnectionId,
         destination_connection_client_id: ClientId,
         timeout_timestamp: Timestamp,
-        maker_msg: Bytes,
+        acknowledgement: Bytes,
+        maker: String,
     },
-
-    // TODO
-    PacketAck {},
 
     WriteAck {
         packet_hash: H256,
@@ -233,15 +241,7 @@ impl IbcEvent {
             "ChannelOpenConfirm" => IbcEvent::ChannelOpenConfirm(parse_channel_event(attrs)?),
             "PacketRecv" => IbcEvent::PacketRecv {
                 packet_hash: attr(&attrs, "packet_hash")?,
-                packet_data: chunked_attr(&attrs, "packet_data")?,
-                source_channel_id: attr(&attrs, "source_channel_id")?,
-                source_connection_id: attr(&attrs, "source_connection_id")?,
-                source_connection_client_id: attr(&attrs, "source_connection_client_id")?,
                 destination_channel_id: attr(&attrs, "destination_channel_id")?,
-                destination_channel_version: attr(&attrs, "destination_channel_version")?,
-                destination_connection_id: attr(&attrs, "destination_connection_id")?,
-                destination_connection_client_id: attr(&attrs, "destination_connection_client_id")?,
-                timeout_timestamp: attr(&attrs, "timeout_timestamp")?,
                 maker_msg: chunked_attr(&attrs, "maker_msg")?,
             },
             "PacketSend" => IbcEvent::PacketSend {
@@ -256,9 +256,24 @@ impl IbcEvent {
                 destination_connection_client_id: attr(&attrs, "destination_connection_client_id")?,
                 timeout_timestamp: attr(&attrs, "timeout_timestamp")?,
             },
-            // TODO
-            "BatchSend" => IbcEvent::BatchSend {},
-            "PacketAck" => IbcEvent::PacketAck {},
+            "BatchSend" => IbcEvent::BatchSend {
+                packet_hash: attr(&attrs, "packet_hash")?,
+                batch_hash: attr(&attrs, "batch_hash")?,
+                channel_id: attr(&attrs, "channel_id")?,
+            },
+            "PacketAck" => IbcEvent::PacketAck {
+                packet_hash: attr(&attrs, "packet_hash")?,
+                source_channel_id: attr(&attrs, "source_channel_id")?,
+                source_connection_id: attr(&attrs, "source_connection_id")?,
+                source_connection_client_id: attr(&attrs, "source_connection_client_id")?,
+                destination_channel_id: attr(&attrs, "destination_channel_id")?,
+                destination_channel_version: attr(&attrs, "destination_channel_version")?,
+                destination_connection_id: attr(&attrs, "destination_connection_id")?,
+                destination_connection_client_id: attr(&attrs, "destination_connection_client_id")?,
+                timeout_timestamp: attr(&attrs, "timeout_timestamp")?,
+                acknowledgement: chunked_attr(&attrs, "acknowledgement")?,
+                maker: attr(&attrs, "maker")?,
+            },
             "WriteAck" => IbcEvent::WriteAck {
                 packet_hash: attr(&attrs, "packet_hash")?,
                 packet_data: chunked_attr(&attrs, "packet_data")?,
