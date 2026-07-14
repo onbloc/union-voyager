@@ -95,7 +95,7 @@
    * various opinionated UI and UX settings
    * feel free to change if you have any strong preferences
    */
-  "window.commandCenter": false,
+  "window.commandCenter": true,
   "files.autoGuessEncoding": true,
   "yaml.schemaStore.enable": true,
   "editor.minimap.enabled": false,
