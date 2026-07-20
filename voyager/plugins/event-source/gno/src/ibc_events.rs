@@ -67,7 +67,6 @@ pub enum IbcEvent {
         timeout_timestamp: Timestamp,
     },
 
-    // TODO
     BatchSend {
         packet_hash: H256,
         batch_hash: H256,
@@ -80,7 +79,6 @@ pub enum IbcEvent {
         maker_msg: Bytes,
     },
 
-    // TODO
     PacketAck {
         packet_hash: H256,
         source_channel_id: ChannelId,
