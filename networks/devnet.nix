@@ -16,6 +16,11 @@
     }:
     let
       arion = inputs'.arion.packages.default;
+      devnetProjectName =
+        let
+          value = builtins.getEnv "DEVNET_PROJECT_NAME";
+        in
+        if value == "" then "full-dev-setup" else value;
 
       mkCosmosDevnet = import ./mkCosmosDevnet.nix {
         inherit pkgs dbg;
@@ -245,7 +250,7 @@
       modules =
         {
           full-dev-setup = {
-            project.name = "full-dev-setup";
+            project.name = devnetProjectName;
             services = services.devnet-eth // services.devnet-union // services.postgres;
           };
         }
