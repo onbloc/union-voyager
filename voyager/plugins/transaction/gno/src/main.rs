@@ -834,7 +834,29 @@ func main(cur realm) {{
                     )
                 }
                 Datagram::IntentPacketRecv(_msg) => todo!(),
-                Datagram::BatchSend(_msg) => todo!(),
+                Datagram::BatchSend(msg) => {
+                    format!(
+                        r#"
+package main
+
+import (
+    core "{ibc_core_realm}"
+    types "gno.land/p/onbloc/ibc/union/types"
+)
+
+func main(cur realm) {{
+	core.BatchSend(cross(cur), types.NewMsgBatchSend(
+	[]types.Packet{{ {} }},
+	))
+}}
+                    "#,
+                        msg.packets
+                            .iter()
+                            .map(gno_packet)
+                            .collect::<Vec<_>>()
+                            .join(","),
+                    )
+                }
                 Datagram::BatchAcks(_msg) => todo!(),
                 Datagram::CommitMembershipProof(_msg) => {
                     return Err(RpcError::fatal_from_message(
