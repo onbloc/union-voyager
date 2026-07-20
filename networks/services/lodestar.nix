@@ -16,7 +16,7 @@ let
       ETH_ENDPOINT=http://geth:8545
       EXECUTION_ENDPOINT=http://geth:8551
 
-      ETH_GENESIS_HASH=$(curl "$ETH_ENDPOINT" \
+      ETH_GENESIS_HASH=$(curl --fail --retry 30 --retry-connrefused --retry-delay 1 "$ETH_ENDPOINT" \
         -X POST \
         -H 'Content-Type: application/json' \
         -d '{"jsonrpc": "2.0", "id": "1", "method": "eth_getBlockByNumber","params": ["0x0", false]}' | jq -r '.result.hash')
