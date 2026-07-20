@@ -1,0 +1,2001 @@
+{
+  "total": 25,
+  "items": [
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "pf7z332xkown"
+          }
+        },
+        "type": "ContentType",
+        "id": "auroBlog",
+        "revision": 1,
+        "createdAt": "2025-12-05T10:52:14.034Z",
+        "updatedAt": "2025-12-05T10:52:14.415Z",
+        "publishedAt": "2025-12-05T10:52:14.415Z",
+        "firstPublishedAt": "2025-12-05T10:52:14.415Z",
+        "publishedVersion": 1,
+        "environment": {
+          "sys": {
+            "id": "master",
+            "type": "Link",
+            "linkType": "Environment"
+          }
+        }
+      },
+      "displayField": "title",
+      "name": "Auro - blog",
+      "description": "",
+      "fields": [
+        {
+          "id": "hidden",
+          "name": "hidden",
+          "type": "Boolean",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "title",
+          "name": "title",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "date",
+          "name": "date",
+          "type": "Date",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "author",
+          "name": "author",
+          "type": "Symbol",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "description",
+          "name": "description",
+          "type": "Text",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "cover",
+          "name": "cover",
+          "type": "Link",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false,
+          "linkType": "Asset"
+        },
+        {
+          "id": "content",
+          "name": "content",
+          "type": "RichText",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "slug",
+          "name": "slug",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        }
+      ]
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "pf7z332xkown"
+          }
+        },
+        "type": "ContentType",
+        "id": "auroYieldCards",
+        "revision": 2,
+        "createdAt": "2025-11-11T11:24:24.360Z",
+        "updatedAt": "2025-11-11T11:39:20.627Z",
+        "publishedAt": "2025-11-11T11:39:20.627Z",
+        "firstPublishedAt": "2025-11-11T11:24:24.752Z",
+        "publishedVersion": 3,
+        "environment": {
+          "sys": {
+            "id": "master",
+            "type": "Link",
+            "linkType": "Environment"
+          }
+        }
+      },
+      "displayField": "title",
+      "name": "Auro - Yield cards",
+      "description": "",
+      "fields": [
+        {
+          "id": "title",
+          "name": "title",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "subTitle",
+          "name": "sub title",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "yield",
+          "name": "yield",
+          "type": "Symbol",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "position",
+          "name": "position",
+          "type": "Integer",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        }
+      ]
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "pf7z332xkown"
+          }
+        },
+        "type": "ContentType",
+        "id": "auroLogo",
+        "revision": 4,
+        "createdAt": "2025-10-16T10:21:31.191Z",
+        "updatedAt": "2025-10-22T13:09:21.745Z",
+        "publishedAt": "2025-10-22T13:09:21.745Z",
+        "firstPublishedAt": "2025-10-16T10:24:09.280Z",
+        "publishedVersion": 8,
+        "environment": {
+          "sys": {
+            "id": "master",
+            "type": "Link",
+            "linkType": "Environment"
+          }
+        }
+      },
+      "displayField": "alt",
+      "name": "Auro - Logo",
+      "description": null,
+      "fields": [
+        {
+          "id": "alt",
+          "name": "Alt Text",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "light",
+          "name": "light",
+          "type": "Link",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false,
+          "linkType": "Asset"
+        },
+        {
+          "id": "dark",
+          "name": "dark",
+          "type": "Link",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false,
+          "linkType": "Asset"
+        }
+      ]
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "pf7z332xkown"
+          }
+        },
+        "type": "ContentType",
+        "id": "auroPartnersContent",
+        "revision": 3,
+        "createdAt": "2025-10-16T10:21:32.661Z",
+        "updatedAt": "2025-10-16T10:42:00.357Z",
+        "publishedAt": "2025-10-16T10:42:00.357Z",
+        "firstPublishedAt": "2025-10-16T10:24:24.646Z",
+        "publishedVersion": 6,
+        "environment": {
+          "sys": {
+            "id": "master",
+            "type": "Link",
+            "linkType": "Environment"
+          }
+        }
+      },
+      "displayField": "heading",
+      "name": "Auro - Partners Content",
+      "description": null,
+      "fields": [
+        {
+          "id": "heading",
+          "name": "Heading",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "body",
+          "name": "Body",
+          "type": "Text",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "partnerLogos",
+          "name": "Partner Logos",
+          "type": "Array",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false,
+          "items": {
+            "type": "Link",
+            "validations": [
+              {
+                "linkContentType": ["auroLogo"]
+              }
+            ],
+            "linkType": "Entry"
+          }
+        }
+      ]
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "pf7z332xkown"
+          }
+        },
+        "type": "ContentType",
+        "id": "auroHeroContent",
+        "revision": 3,
+        "createdAt": "2025-10-16T10:21:31.217Z",
+        "updatedAt": "2025-10-16T10:41:59.010Z",
+        "publishedAt": "2025-10-16T10:41:59.010Z",
+        "firstPublishedAt": "2025-10-16T10:24:03.954Z",
+        "publishedVersion": 6,
+        "environment": {
+          "sys": {
+            "id": "master",
+            "type": "Link",
+            "linkType": "Environment"
+          }
+        }
+      },
+      "displayField": "titleLine1",
+      "name": "Auro - Hero Content",
+      "description": null,
+      "fields": [
+        {
+          "id": "titleLine1",
+          "name": "Title Line 1",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "titleLine2",
+          "name": "Title Line 2",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "videoUrl",
+          "name": "Video URL",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "partnerLogos",
+          "name": "Partner Logos",
+          "type": "Array",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false,
+          "items": {
+            "type": "Link",
+            "validations": [
+              {
+                "linkContentType": ["auroLogo"]
+              }
+            ],
+            "linkType": "Entry"
+          }
+        }
+      ]
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "pf7z332xkown"
+          }
+        },
+        "type": "ContentType",
+        "id": "auroStatsContent",
+        "revision": 1,
+        "createdAt": "2025-10-16T10:21:31.246Z",
+        "updatedAt": "2025-10-16T10:24:43.280Z",
+        "publishedAt": "2025-10-16T10:24:43.280Z",
+        "firstPublishedAt": "2025-10-16T10:24:43.280Z",
+        "publishedVersion": 2,
+        "environment": {
+          "sys": {
+            "id": "master",
+            "type": "Link",
+            "linkType": "Environment"
+          }
+        }
+      },
+      "displayField": "heading",
+      "name": "Auro - Stats Content",
+      "description": null,
+      "fields": [
+        {
+          "id": "heading",
+          "name": "Heading",
+          "type": "Text",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "stats",
+          "name": "Stats",
+          "type": "Array",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false,
+          "items": {
+            "type": "Link",
+            "validations": [
+              {
+                "linkContentType": ["auroStatItem"]
+              }
+            ],
+            "linkType": "Entry"
+          }
+        }
+      ]
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "pf7z332xkown"
+          }
+        },
+        "type": "ContentType",
+        "id": "auroStatItem",
+        "revision": 1,
+        "createdAt": "2025-10-16T10:21:31.237Z",
+        "updatedAt": "2025-10-16T10:24:38.990Z",
+        "publishedAt": "2025-10-16T10:24:38.990Z",
+        "firstPublishedAt": "2025-10-16T10:24:38.990Z",
+        "publishedVersion": 2,
+        "environment": {
+          "sys": {
+            "id": "master",
+            "type": "Link",
+            "linkType": "Environment"
+          }
+        }
+      },
+      "displayField": "label",
+      "name": "Auro - Stat Item",
+      "description": null,
+      "fields": [
+        {
+          "id": "value",
+          "name": "Value",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "label",
+          "name": "Label",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "position",
+          "name": "Position",
+          "type": "Integer",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        }
+      ]
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "pf7z332xkown"
+          }
+        },
+        "type": "ContentType",
+        "id": "auroSecuritySlide",
+        "revision": 1,
+        "createdAt": "2025-10-16T10:21:31.705Z",
+        "updatedAt": "2025-10-16T10:24:35.304Z",
+        "publishedAt": "2025-10-16T10:24:35.304Z",
+        "firstPublishedAt": "2025-10-16T10:24:35.304Z",
+        "publishedVersion": 2,
+        "environment": {
+          "sys": {
+            "id": "master",
+            "type": "Link",
+            "linkType": "Environment"
+          }
+        }
+      },
+      "displayField": "title",
+      "name": "Auro - Security Slide",
+      "description": null,
+      "fields": [
+        {
+          "id": "leading",
+          "name": "Leading",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "title",
+          "name": "Title",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "body",
+          "name": "Body",
+          "type": "Text",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "image",
+          "name": "Image",
+          "type": "Link",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false,
+          "linkType": "Asset"
+        },
+        {
+          "id": "position",
+          "name": "Position",
+          "type": "Integer",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        }
+      ]
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "pf7z332xkown"
+          }
+        },
+        "type": "ContentType",
+        "id": "auroSecuritySection",
+        "revision": 1,
+        "createdAt": "2025-10-16T10:21:32.650Z",
+        "updatedAt": "2025-10-16T10:24:31.041Z",
+        "publishedAt": "2025-10-16T10:24:31.041Z",
+        "firstPublishedAt": "2025-10-16T10:24:31.041Z",
+        "publishedVersion": 2,
+        "environment": {
+          "sys": {
+            "id": "master",
+            "type": "Link",
+            "linkType": "Environment"
+          }
+        }
+      },
+      "displayField": null,
+      "name": "Auro - Security Section",
+      "description": null,
+      "fields": [
+        {
+          "id": "slides",
+          "name": "Slides",
+          "type": "Array",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false,
+          "items": {
+            "type": "Link",
+            "validations": [
+              {
+                "linkContentType": ["auroSecuritySlide"]
+              }
+            ],
+            "linkType": "Entry"
+          }
+        }
+      ]
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "pf7z332xkown"
+          }
+        },
+        "type": "ContentType",
+        "id": "auroNewsletterContent",
+        "revision": 1,
+        "createdAt": "2025-10-16T10:21:32.665Z",
+        "updatedAt": "2025-10-16T10:24:16.242Z",
+        "publishedAt": "2025-10-16T10:24:16.242Z",
+        "firstPublishedAt": "2025-10-16T10:24:16.242Z",
+        "publishedVersion": 2,
+        "environment": {
+          "sys": {
+            "id": "master",
+            "type": "Link",
+            "linkType": "Environment"
+          }
+        }
+      },
+      "displayField": "heading",
+      "name": "Auro - Newsletter Content",
+      "description": null,
+      "fields": [
+        {
+          "id": "heading",
+          "name": "Heading",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "subtitle",
+          "name": "Subtitle",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "backgroundImage",
+          "name": "Background Image",
+          "type": "Link",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false,
+          "linkType": "Asset"
+        },
+        {
+          "id": "successTitle",
+          "name": "Success Title",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "successBody",
+          "name": "Success Body",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "alreadyExistsTitle",
+          "name": "Already Exists Title",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "alreadyExistsBody",
+          "name": "Already Exists Body",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        }
+      ]
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "pf7z332xkown"
+          }
+        },
+        "type": "ContentType",
+        "id": "auroFooterSection",
+        "revision": 1,
+        "createdAt": "2025-10-16T10:21:32.671Z",
+        "updatedAt": "2025-10-16T10:23:58.519Z",
+        "publishedAt": "2025-10-16T10:23:58.519Z",
+        "firstPublishedAt": "2025-10-16T10:23:58.519Z",
+        "publishedVersion": 2,
+        "environment": {
+          "sys": {
+            "id": "master",
+            "type": "Link",
+            "linkType": "Environment"
+          }
+        }
+      },
+      "displayField": "title",
+      "name": "Auro - Footer Section",
+      "description": null,
+      "fields": [
+        {
+          "id": "title",
+          "name": "Title",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "items",
+          "name": "Items",
+          "type": "Array",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false,
+          "items": {
+            "type": "Link",
+            "validations": [
+              {
+                "linkContentType": ["auroFooterLink"]
+              }
+            ],
+            "linkType": "Entry"
+          }
+        },
+        {
+          "id": "position",
+          "name": "Position",
+          "type": "Integer",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        }
+      ]
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "pf7z332xkown"
+          }
+        },
+        "type": "ContentType",
+        "id": "auroFooterLink",
+        "revision": 1,
+        "createdAt": "2025-10-16T10:21:32.632Z",
+        "updatedAt": "2025-10-16T10:23:49.514Z",
+        "publishedAt": "2025-10-16T10:23:49.514Z",
+        "firstPublishedAt": "2025-10-16T10:23:49.514Z",
+        "publishedVersion": 2,
+        "environment": {
+          "sys": {
+            "id": "master",
+            "type": "Link",
+            "linkType": "Environment"
+          }
+        }
+      },
+      "displayField": "text",
+      "name": "Auro - Footer Link",
+      "description": null,
+      "fields": [
+        {
+          "id": "text",
+          "name": "Text",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "href",
+          "name": "Href",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        }
+      ]
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "pf7z332xkown"
+          }
+        },
+        "type": "ContentType",
+        "id": "auroFooterContent",
+        "revision": 1,
+        "createdAt": "2025-10-16T10:21:32.644Z",
+        "updatedAt": "2025-10-16T10:23:45.367Z",
+        "publishedAt": "2025-10-16T10:23:45.367Z",
+        "firstPublishedAt": "2025-10-16T10:23:45.367Z",
+        "publishedVersion": 2,
+        "environment": {
+          "sys": {
+            "id": "master",
+            "type": "Link",
+            "linkType": "Environment"
+          }
+        }
+      },
+      "displayField": "copyrightText",
+      "name": "Auro - Footer Content",
+      "description": null,
+      "fields": [
+        {
+          "id": "copyrightText",
+          "name": "Copyright Text",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "sections",
+          "name": "Sections",
+          "type": "Array",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false,
+          "items": {
+            "type": "Link",
+            "validations": [
+              {
+                "linkContentType": ["auroFooterSection"]
+              }
+            ],
+            "linkType": "Entry"
+          }
+        }
+      ]
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "pf7z332xkown"
+          }
+        },
+        "type": "ContentType",
+        "id": "auroFeatureSlide",
+        "revision": 1,
+        "createdAt": "2025-10-16T10:21:31.230Z",
+        "updatedAt": "2025-10-16T10:23:41.718Z",
+        "publishedAt": "2025-10-16T10:23:41.718Z",
+        "firstPublishedAt": "2025-10-16T10:23:41.718Z",
+        "publishedVersion": 2,
+        "environment": {
+          "sys": {
+            "id": "master",
+            "type": "Link",
+            "linkType": "Environment"
+          }
+        }
+      },
+      "displayField": "title",
+      "name": "Auro - Feature Slide",
+      "description": null,
+      "fields": [
+        {
+          "id": "title",
+          "name": "Title",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "body",
+          "name": "Body",
+          "type": "Text",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "position",
+          "name": "Position",
+          "type": "Integer",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        }
+      ]
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "pf7z332xkown"
+          }
+        },
+        "type": "ContentType",
+        "id": "auroFeatureSection",
+        "revision": 1,
+        "createdAt": "2025-10-16T10:21:31.682Z",
+        "updatedAt": "2025-10-16T10:23:36.204Z",
+        "publishedAt": "2025-10-16T10:23:36.204Z",
+        "firstPublishedAt": "2025-10-16T10:23:36.204Z",
+        "publishedVersion": 2,
+        "environment": {
+          "sys": {
+            "id": "master",
+            "type": "Link",
+            "linkType": "Environment"
+          }
+        }
+      },
+      "displayField": "videoUrl",
+      "name": "Auro - Feature Section",
+      "description": null,
+      "fields": [
+        {
+          "id": "videoUrl",
+          "name": "Video URL",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "slides",
+          "name": "Slides",
+          "type": "Array",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false,
+          "items": {
+            "type": "Link",
+            "validations": [
+              {
+                "linkContentType": ["auroFeatureSlide"]
+              }
+            ],
+            "linkType": "Entry"
+          }
+        }
+      ]
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "pf7z332xkown"
+          }
+        },
+        "type": "ContentType",
+        "id": "terms",
+        "revision": 1,
+        "createdAt": "2025-08-28T19:24:13.214Z",
+        "updatedAt": "2025-08-28T19:24:13.514Z",
+        "publishedAt": "2025-08-28T19:24:13.514Z",
+        "firstPublishedAt": "2025-08-28T19:24:13.514Z",
+        "publishedVersion": 1,
+        "environment": {
+          "sys": {
+            "id": "master",
+            "type": "Link",
+            "linkType": "Environment"
+          }
+        }
+      },
+      "displayField": "title",
+      "name": "terms",
+      "description": "",
+      "fields": [
+        {
+          "id": "title",
+          "name": "Title",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "copy",
+          "name": "Copy",
+          "type": "RichText",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        }
+      ]
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "pf7z332xkown"
+          }
+        },
+        "type": "ContentType",
+        "id": "roadmapSubsection",
+        "revision": 10,
+        "createdAt": "2025-08-13T19:50:53.780Z",
+        "updatedAt": "2025-08-14T14:28:36.184Z",
+        "publishedAt": "2025-08-14T14:28:36.184Z",
+        "firstPublishedAt": "2025-08-13T19:50:54.140Z",
+        "publishedVersion": 19,
+        "environment": {
+          "sys": {
+            "id": "master",
+            "type": "Link",
+            "linkType": "Environment"
+          }
+        }
+      },
+      "displayField": "subsection",
+      "name": "roadmap-subsection",
+      "description": "mid level",
+      "fields": [
+        {
+          "id": "subsection",
+          "name": "subsection",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "linkedSection",
+          "name": "linked-section",
+          "type": "Link",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false,
+          "linkType": "Entry",
+          "validations": [
+            {
+              "linkContentType": ["roadmapSection"]
+            }
+          ]
+        },
+        {
+          "id": "position",
+          "name": "position",
+          "type": "Integer",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "description",
+          "name": "description",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "percentComplete",
+          "name": "percent-complete",
+          "type": "Integer",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "slug",
+          "name": "slug",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        }
+      ]
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "pf7z332xkown"
+          }
+        },
+        "type": "ContentType",
+        "id": "roadmapSection",
+        "revision": 9,
+        "createdAt": "2025-08-13T19:39:32.673Z",
+        "updatedAt": "2025-08-14T14:27:06.586Z",
+        "publishedAt": "2025-08-14T14:27:06.586Z",
+        "firstPublishedAt": "2025-08-13T19:39:32.909Z",
+        "publishedVersion": 17,
+        "environment": {
+          "sys": {
+            "id": "master",
+            "type": "Link",
+            "linkType": "Environment"
+          }
+        }
+      },
+      "displayField": "section",
+      "name": "roadmap-section",
+      "description": "top level",
+      "fields": [
+        {
+          "id": "section",
+          "name": "section",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "position",
+          "name": "position",
+          "type": "Integer",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "description",
+          "name": "description",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "percentComplete",
+          "name": "percent-complete",
+          "type": "Integer",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "slug",
+          "name": "slug",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        }
+      ]
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "pf7z332xkown"
+          }
+        },
+        "type": "ContentType",
+        "id": "roadmapMilestone",
+        "revision": 12,
+        "createdAt": "2025-08-13T19:53:00.421Z",
+        "updatedAt": "2025-08-13T21:35:37.045Z",
+        "publishedAt": "2025-08-13T21:35:37.045Z",
+        "firstPublishedAt": "2025-08-13T19:53:00.744Z",
+        "publishedVersion": 23,
+        "environment": {
+          "sys": {
+            "id": "master",
+            "type": "Link",
+            "linkType": "Environment"
+          }
+        }
+      },
+      "displayField": "milestone",
+      "name": "roadmap-milestone",
+      "description": "bottom level",
+      "fields": [
+        {
+          "id": "milestone",
+          "name": "milestone",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "linkedSubsection",
+          "name": "linked-subsection",
+          "type": "Link",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false,
+          "linkType": "Entry",
+          "validations": [
+            {
+              "linkContentType": ["roadmapSubsection"]
+            }
+          ]
+        },
+        {
+          "id": "position",
+          "name": "position",
+          "type": "Integer",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "description",
+          "name": "description",
+          "type": "Symbol",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "markComplete",
+          "name": "mark-complete",
+          "type": "Boolean",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "incompleteIcon",
+          "name": "incomplete-icon",
+          "type": "Link",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false,
+          "linkType": "Asset"
+        },
+        {
+          "id": "completeIcon",
+          "name": "complete-icon",
+          "type": "Link",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false,
+          "linkType": "Asset"
+        },
+        {
+          "id": "slug",
+          "name": "slug",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        }
+      ]
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "pf7z332xkown"
+          }
+        },
+        "type": "ContentType",
+        "id": "ecosystemCategory",
+        "revision": 5,
+        "createdAt": "2024-10-11T14:06:01.630Z",
+        "updatedAt": "2024-11-25T15:31:17.927Z",
+        "publishedAt": "2024-11-25T15:31:17.927Z",
+        "firstPublishedAt": "2024-10-11T14:06:02.082Z",
+        "publishedVersion": 9,
+        "environment": {
+          "sys": {
+            "id": "master",
+            "type": "Link",
+            "linkType": "Environment"
+          }
+        }
+      },
+      "displayField": "category",
+      "name": "ecosystem-category",
+      "description": "",
+      "fields": [
+        {
+          "id": "category",
+          "name": "category",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "textColor",
+          "name": "textColor",
+          "type": "Symbol",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "bgColor",
+          "name": "bgColor",
+          "type": "Symbol",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        }
+      ]
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "pf7z332xkown"
+          }
+        },
+        "type": "ContentType",
+        "id": "ecosystem",
+        "revision": 9,
+        "createdAt": "2024-10-11T13:36:48.278Z",
+        "updatedAt": "2024-11-11T15:19:16.647Z",
+        "publishedAt": "2024-11-11T15:19:16.647Z",
+        "firstPublishedAt": "2024-10-11T13:36:48.880Z",
+        "publishedVersion": 17,
+        "environment": {
+          "sys": {
+            "id": "master",
+            "type": "Link",
+            "linkType": "Environment"
+          }
+        }
+      },
+      "displayField": "name",
+      "name": "ecosystem",
+      "description": "",
+      "fields": [
+        {
+          "id": "name",
+          "name": "name",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "url",
+          "name": "url",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "logo",
+          "name": "logo",
+          "type": "Link",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false,
+          "linkType": "Asset"
+        },
+        {
+          "id": "background",
+          "name": "background",
+          "type": "Link",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false,
+          "linkType": "Asset"
+        },
+        {
+          "id": "category",
+          "name": "category",
+          "type": "Array",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false,
+          "items": {
+            "type": "Link",
+            "validations": [
+              {
+                "linkContentType": ["ecosystemCategory"]
+              }
+            ],
+            "linkType": "Entry"
+          }
+        }
+      ]
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "pf7z332xkown"
+          }
+        },
+        "type": "ContentType",
+        "id": "team",
+        "revision": 5,
+        "createdAt": "2024-10-10T12:57:25.474Z",
+        "updatedAt": "2024-11-07T21:22:45.696Z",
+        "publishedAt": "2024-11-07T21:22:45.696Z",
+        "firstPublishedAt": "2024-10-10T12:57:26.045Z",
+        "publishedVersion": 9,
+        "environment": {
+          "sys": {
+            "id": "master",
+            "type": "Link",
+            "linkType": "Environment"
+          }
+        }
+      },
+      "displayField": "name",
+      "name": "team",
+      "description": "",
+      "fields": [
+        {
+          "id": "name",
+          "name": "name",
+          "type": "Symbol",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "title",
+          "name": "title",
+          "type": "Symbol",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "twitterHandle",
+          "name": "twitter handle",
+          "type": "Symbol",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "profilePicture",
+          "name": "Profile picture",
+          "type": "Link",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false,
+          "linkType": "Asset"
+        },
+        {
+          "id": "twitterPicture",
+          "name": "twitterPicture",
+          "type": "Link",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false,
+          "linkType": "Asset"
+        },
+        {
+          "id": "position",
+          "name": "position",
+          "type": "Integer",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        }
+      ]
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "pf7z332xkown"
+          }
+        },
+        "type": "ContentType",
+        "id": "learn",
+        "revision": 3,
+        "createdAt": "2024-10-07T17:35:08.661Z",
+        "updatedAt": "2024-10-07T17:44:23.736Z",
+        "publishedAt": "2024-10-07T17:44:23.736Z",
+        "firstPublishedAt": "2024-10-07T17:35:09.434Z",
+        "publishedVersion": 5,
+        "environment": {
+          "sys": {
+            "id": "master",
+            "type": "Link",
+            "linkType": "Environment"
+          }
+        }
+      },
+      "displayField": "entryTitle",
+      "name": "learn",
+      "description": "",
+      "fields": [
+        {
+          "id": "entryTitle",
+          "name": "Entry title",
+          "type": "Symbol",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "coverTitle",
+          "name": "Cover title",
+          "type": "RichText",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "coverText",
+          "name": "Cover text",
+          "type": "RichText",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "firstTitle",
+          "name": "First title",
+          "type": "RichText",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "firstText",
+          "name": "First text",
+          "type": "RichText",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "secondTitle",
+          "name": "Second title",
+          "type": "RichText",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "secondText",
+          "name": "Second text",
+          "type": "RichText",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "thirdTitle",
+          "name": "Third title",
+          "type": "RichText",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "thirdText",
+          "name": "Third text",
+          "type": "RichText",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "fourthTitle",
+          "name": "Fourth title",
+          "type": "RichText",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "fourthText",
+          "name": "Fourth text",
+          "type": "RichText",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "fifthTitle",
+          "name": "Fifth title",
+          "type": "RichText",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "fifthText",
+          "name": "Fifth Text",
+          "type": "RichText",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "sixthTitle",
+          "name": "Sixth title",
+          "type": "RichText",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "sixthText",
+          "name": "Sixth text",
+          "type": "RichText",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "seventhTitle",
+          "name": "Seventh title",
+          "type": "RichText",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "seventhText",
+          "name": "Seventh text",
+          "type": "RichText",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "eighthTitle",
+          "name": "Eighth title",
+          "type": "RichText",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "eighthText",
+          "name": "Eighth text",
+          "type": "RichText",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "ninthTitle",
+          "name": "Ninth title",
+          "type": "RichText",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "ninthText",
+          "name": "Ninth text",
+          "type": "RichText",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        }
+      ]
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "pf7z332xkown"
+          }
+        },
+        "type": "ContentType",
+        "id": "landing",
+        "revision": 18,
+        "createdAt": "2024-10-07T14:21:01.907Z",
+        "updatedAt": "2024-10-07T17:32:18.581Z",
+        "publishedAt": "2024-10-07T17:32:18.581Z",
+        "firstPublishedAt": "2024-10-07T14:21:02.405Z",
+        "publishedVersion": 35,
+        "environment": {
+          "sys": {
+            "id": "master",
+            "type": "Link",
+            "linkType": "Environment"
+          }
+        }
+      },
+      "displayField": "entry",
+      "name": "landing",
+      "description": "",
+      "fields": [
+        {
+          "id": "entry",
+          "name": "Entry title",
+          "type": "Symbol",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "firstTitle",
+          "name": "First title",
+          "type": "RichText",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "firstText",
+          "name": "First text",
+          "type": "RichText",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "secondTitle",
+          "name": "Second title",
+          "type": "RichText",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "secondText",
+          "name": "Second text",
+          "type": "RichText",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "thirdTitle",
+          "name": "Third title",
+          "type": "RichText",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "thirdText",
+          "name": "Third text",
+          "type": "RichText",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "fourthTitle",
+          "name": " Fourth title",
+          "type": "RichText",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "fourthText",
+          "name": " Fourth text",
+          "type": "RichText",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        }
+      ]
+    },
+    {
+      "sys": {
+        "space": {
+          "sys": {
+            "type": "Link",
+            "linkType": "Space",
+            "id": "pf7z332xkown"
+          }
+        },
+        "type": "ContentType",
+        "id": "blog",
+        "revision": 22,
+        "createdAt": "2024-07-17T18:45:34.131Z",
+        "updatedAt": "2024-07-30T19:38:54.395Z",
+        "publishedAt": "2024-07-30T19:38:54.395Z",
+        "firstPublishedAt": "2024-07-17T18:45:34.610Z",
+        "publishedVersion": 43,
+        "environment": {
+          "sys": {
+            "id": "master",
+            "type": "Link",
+            "linkType": "Environment"
+          }
+        }
+      },
+      "displayField": "title",
+      "name": "blog",
+      "description": "blog post",
+      "fields": [
+        {
+          "id": "hidden",
+          "name": "hidden",
+          "type": "Boolean",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "title",
+          "name": "title",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "date",
+          "name": "date",
+          "type": "Date",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "author",
+          "name": "author",
+          "type": "Symbol",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "description",
+          "name": "description",
+          "type": "Text",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "cover",
+          "name": "cover",
+          "type": "Link",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false,
+          "linkType": "Asset"
+        },
+        {
+          "id": "content",
+          "name": "content",
+          "type": "RichText",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "slug",
+          "name": "slug",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        }
+      ]
+    }
+  ]
+}

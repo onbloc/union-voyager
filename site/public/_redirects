@@ -1,1 +1,2 @@
 /docs https://docs.union.build 301
+/docs/* https://docs.union.build/:splat 301

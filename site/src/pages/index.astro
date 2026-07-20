@@ -1,13 +1,11 @@
 ---
-import { contentfulClient } from "#/lib/contentful/client.ts"
-import type { LandingPageFields, LandingPageSkeleton } from "#/lib/contentful/types.ts"
-
 import ContainedSection from "#/components//ContainedSection.astro"
 import ConsensusSection from "#/components/sections/landing/ConsensusSection.astro"
 import ExecutionSection from "#/components/sections/landing/ExecutionSection.astro"
 import ZkSection from "#/components/sections/landing/ZkSection.astro"
 import MarqueeSection from "#/components/sections/MarqueeSection.astro"
 import SectionsContainer from "#/components/SectionsContainer.astro"
+import landingData from "#/content-data/landing.json"
 
 import pod_atom from "#/assets/images/marquee/pods/atom.png"
 import pod_blockchange from "#/assets/images/marquee/pods/blockchange.png"
@@ -30,11 +28,6 @@ import partner_secret from "#/assets/images/marquee/partners/secret.png"
 import partner_stargaze from "#/assets/images/marquee/partners/stargaze.png"
 import partner_stride from "#/assets/images/marquee/partners/stride.png"
 import AnimationLayout from "#/layouts/AnimationLayout.astro"
-
-export const prerender = false
-
-// The browser should always check freshness
-Astro.response.headers.set("cache-control", "public, max-age=0, must-revalidate")
 
 const pods = [
   { name: "Tioga", logo: pod_tioga, url: "" },
@@ -60,62 +53,33 @@ const partners = [
   { name: "Bera", logo: partner_bera, url: "" },
   { name: "Arbitrum", logo: partner_arbitrum, url: "" },
 ]
-
-let landingData: LandingPageFields | null = null
-let error: string | null = null
-try {
-  const landingEntries = await contentfulClient.getEntries<LandingPageSkeleton>({
-    content_type: "landing",
-  })
-  if (landingEntries.items.length > 0) {
-    landingData = landingEntries.items[0].fields
-  } else {
-    error = "No landing page data found."
-  }
-} catch (err) {
-  console.error("Error fetching Contentful data:", err)
-  error = "Failed to load content. Please try again later."
-}
 ---
 
-{
-  error ? (
-    <div class="error-message">
-      <h2>Error</h2>
-      <p>{error}</p>
-    </div>
-  ) : landingData ? (
-    <AnimationLayout
-      title="Join the union"
-      text="The next generation of aggregation, interoperability, and chain abstraction."
-    >
-      <SectionsContainer>
-        <ConsensusSection
-          title={landingData.secondTitle}
-          text={landingData.secondText}
+<AnimationLayout
+  title="Join the union"
+  text="The next generation of aggregation, interoperability, and chain abstraction."
+>
+  <SectionsContainer>
+    <ConsensusSection
+      titleHtml={landingData.secondTitleHtml}
+      textHtml={landingData.secondTextHtml}
+    />
+    <ZkSection
+      titleHtml={landingData.thirdTitleHtml}
+      textHtml={landingData.thirdTextHtml}
+    />
+    <ExecutionSection
+      titleHtml={landingData.fourthTitleHtml}
+      textHtml={landingData.fourthTextHtml}
+    />
+    <ContainedSection>
+      <div class="py-16">
+        <MarqueeSection
+          title={"Our partners."}
+          reverse={true}
+          data={partners}
         />
-        <ZkSection
-          title={landingData.thirdTitle}
-          text={landingData.thirdText}
-        />
-        <ExecutionSection
-          title={landingData.fourthTitle}
-          text={landingData.fourthText}
-        />
-        <ContainedSection>
-          <div class="py-16">
-            <MarqueeSection
-              title={"Our partners."}
-              reverse={true}
-              data={partners}
-            />
-          </div>
-        </ContainedSection>
-      </SectionsContainer>
-    </AnimationLayout>
-  ) : (
-    <div class="loading-message">
-      <p>Loading content...</p>
-    </div>
-  )
-}
+      </div>
+    </ContainedSection>
+  </SectionsContainer>
+</AnimationLayout>

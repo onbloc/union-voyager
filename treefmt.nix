@@ -238,6 +238,7 @@
         "**/generated/**"
         ".github/**/*.sh"
         ".github/**/*.md"
+        "site/src/content/**/*.md"
         "**/.gitattributes"
         "uniond/docs/static/**"
         ".git-blame-ignore-revs"

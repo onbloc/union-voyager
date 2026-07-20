@@ -1,12 +1,13 @@
 ---
 import Card from "#/components/Card.astro"
+import type { LocalAsset } from "#/lib/types.ts"
 
 interface Props {
   person: {
     twitterHandle: string
-    twitterPicture: unknown
+    twitterPicture: LocalAsset | null
     name: string
-    profilePicture: unknown
+    profilePicture: LocalAsset | null
     title: string
   }
 }
@@ -25,10 +26,10 @@ const { person } = Astro.props
       <!-- Default profile picture -->
       <div class="transition-opacity duration-300 ease-in-out group-hover:opacity-0">
         {
-          person?.profilePicture?.fields?.file?.url ? (
+          person.profilePicture?.path ? (
             <img
               class="w-full aspect-[1/1]"
-              src={person?.profilePicture?.fields?.file?.url}
+              src={person.profilePicture.path}
               alt={`${person.name} - Union worker`}
             />
           ) : <div class="bg-neutral-900 aspect-1 w-full" />
@@ -38,10 +39,10 @@ const { person } = Astro.props
       <!-- Twitter picture or grey background that shows on hover -->
       <div class="absolute inset-0 opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100">
         {
-          person?.twitterPicture ? (
+          person.twitterPicture?.path ? (
             <img
               class="w-full h-full object-cover"
-              src={person?.twitterPicture?.fields?.file?.url}
+              src={person.twitterPicture.path}
               alt={`${person.name} - Twitter profile`}
             />
           ) : <div class="bg-gray-600 w-full h-full" />

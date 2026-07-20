@@ -89,6 +89,7 @@ impl Module {
         channel_id: ChannelId,
         packet_hash: H256,
     ) -> RpcResult<PacketByHashResponse> {
+        let ibc_core_realm = &self.ibc_core_realm;
         let query = format!(
             r#"query getEvents {{
   getTransactions(
@@ -100,7 +101,7 @@ impl Module {
             {{
               GnoEvent: {{
                 type: {{ eq: "PacketSend" }}
-                pkg_path: {{ eq: "{}" }},
+                pkg_path: {{ eq: "{ibc_core_realm}" }},
                 attrs: {{
                   key: {{ eq: "source_channel_id" }}
                   value: {{ eq: "{channel_id}" }}
@@ -110,7 +111,7 @@ impl Module {
             {{
               GnoEvent: {{
                 type: {{ eq: "PacketSend" }}
-                pkg_path: {{ eq: "gno.land/r/core/ibc/v1/core" }},
+                pkg_path: {{ eq: "{ibc_core_realm}" }},
                 attrs: {{
                   key: {{ eq:"packet_hash" }}
                   value: {{ eq:"{packet_hash}" }}
@@ -137,8 +138,7 @@ impl Module {
       }}
     }}
   }}
-}}"#,
-            self.ibc_core_realm
+}}"#
         );
 
         println!("{query}");

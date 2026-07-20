@@ -1,7 +1,6 @@
 ---
 import TeamMember from "#/components/TeamMember.astro"
-import { contentfulClient } from "../lib/contentful/client.ts"
-import type { TeamPageFields, TeamPageSkeleton } from "../lib/contentful/types.ts"
+import allTeamData from "#/content-data/team.json"
 
 import vc_founderheads from "#/assets/images/investors/founderheads.svg"
 import vc_galileo from "#/assets/images/investors/galileo.svg"
@@ -77,52 +76,29 @@ const teams = [
   },
 ]
 
-let teamData: Array<TeamPageFields> | null = null
-let error: string | null = null
-
-try {
-  const teamEntries = await contentfulClient.getEntries<TeamPageSkeleton>({
-    content_type: "team",
-  })
-
-  if (teamEntries.items.length > 0) {
-    teamData = teamEntries.items
-      .map(item => item.fields)
-      .sort((a, b) => {
-        const posA = typeof a.position === "number" ? a.position : Number.POSITIVE_INFINITY
-        const posB = typeof b.position === "number" ? b.position : Number.POSITIVE_INFINITY
-        return posA - posB
-      })
-  } else {
-    error = "No team data found."
-  }
-} catch (err) {
-  console.error("Error fetching Contentful data:", err)
-  error = "Failed to load content. Please try again later."
-}
+const teamData = allTeamData.filter((person) => import.meta.env.PROD ? person.published : true)
 ---
 
-{
-  error ? (
-    <div class="error-message">
-      <h2>Error</h2>
-      <p>{error}</p>
-    </div>
-  ) : teamData ? (
-    <AnimationLayout
-      title="Meet the team"
-      text="Product People."
-    >
-      <ContainedSection
-        grid
-        className="grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
-      >
-        {teamData.map((person) => <TeamMember {person} />)}
-      </ContainedSection>
-    </AnimationLayout>
-  ) : (
-    <div class="loading-message">
-      <p>Loading content...</p>
-    </div>
-  )
-}
+<AnimationLayout
+  title="Meet the team"
+  text="Product People."
+>
+  <ContainedSection
+    grid
+    className="grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+  >
+    {
+      teamData.map((person) => (
+        <TeamMember
+          person={{
+            name: person.name,
+            title: person.title,
+            twitterHandle: person.twitterHandle,
+            profilePicture: person.profilePicture,
+            twitterPicture: person.twitterPicture,
+          }}
+        />
+      ))
+    }
+  </ContainedSection>
+</AnimationLayout>

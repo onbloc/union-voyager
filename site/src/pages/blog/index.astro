@@ -2,26 +2,14 @@
 import Card from "#/components/Card.astro"
 import ContainedSection from "#/components/ContainedSection.astro"
 import AnimationLayout from "#/layouts/AnimationLayout.astro"
-import { contentfulClient } from "#/lib/contentful/client.ts"
-import type { BlogPost } from "#/lib/types.ts"
+import { getCollection } from "astro:content"
 
-export const prerender = false
-
-const blogEntries = await contentfulClient.getEntries<BlogPost>({
-  content_type: "blog",
-  // @ts-expect-error
-  order: "-fields.date",
-  limit: 100, // max limit
-})
-
-const publishedBlogPosts = blogEntries.items.filter(entry =>
-  import.meta.env.MODE === "production" ? entry.fields.hidden !== true : true
-) as unknown as Array<BlogPost>
-
-// The browser should always check freshness
-Astro.response.headers.set("cache-control", "public, max-age=0, must-revalidate")
-
-const imageWithProtocol = (url: string) => `https:${url}`
+const publishedBlogPosts = (
+  await getCollection(
+    "blog",
+    (post) => import.meta.env.PROD ? post.data.published && !post.data.hidden : true,
+  )
+).sort((left, right) => right.data.date.getTime() - left.data.date.getTime())
 ---
 
 <AnimationLayout
@@ -33,10 +21,10 @@ const imageWithProtocol = (url: string) => `https:${url}`
     className="grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
   >
     {
-      publishedBlogPosts.map((blogPostEntry: BlogPost) => (
+      publishedBlogPosts.map((blogPost) => (
         <a
           class="pointer-cursor"
-          href={`/blog/${blogPostEntry.fields.slug}`}
+          href={`/blog/${blogPost.slug}`}
         >
           <Card
             hoverScale
@@ -46,18 +34,16 @@ const imageWithProtocol = (url: string) => `https:${url}`
               <img
                 class="transition w-full h-full object-cover border-none"
                 loading="eager"
-                alt={blogPostEntry.fields.cover.fields.title}
-                src={`${
-                  imageWithProtocol(blogPostEntry.fields.cover.fields.file.url)
-                }?fit=fill&f=center&fm=avif&w=1344&h=706`}
+                alt={blogPost.data.coverAlt}
+                src={blogPost.data.cover}
               />
             </div>
             <div class="flex flex-col gap-2 p-4">
               <h2 class="font-supermolot uppercase font-bold text-xl">
-                {blogPostEntry.fields.title}
+                {blogPost.data.title}
               </h2>
               <p class="text-base text-neutral-200 font-mono">
-                {blogPostEntry.fields.description}
+                {blogPost.data.description}
               </p>
             </div>
           </Card>

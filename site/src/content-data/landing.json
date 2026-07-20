@@ -1,0 +1,17 @@
+{
+  "sourceId": "4uUaFEC3vejLJAs87fOeIR",
+  "createdAt": "2024-10-07T14:21:19.167Z",
+  "updatedAt": "2024-10-14T18:11:04.568Z",
+  "firstPublishedAt": "2024-10-07T15:16:01.688Z",
+  "publishedAt": "2024-10-14T18:11:04.568Z",
+  "published": true,
+  "entry": "Home",
+  "firstTitleHtml": "Join the Union",
+  "firstTextHtml": "<p>The next generation of aggregation, interoperability, and chain<span class=\"text-accent-500\"> </span>abstraction.</p>",
+  "secondTitleHtml": "Consensus verification for security and <span class=\"text-accent-500\">scalability.</span>",
+  "secondTextHtml": "<p>The first subsecond messaging protocol for application-specific intents and transfers.</p>",
+  "thirdTitleHtml": "The endgame is ZK",
+  "thirdTextHtml": "<p>Proof Singularity</p>\n<p>Unlimited Connections</p>\n<p>Real-time</p>",
+  "fourthTitleHtml": "Native on <span class=\"text-accent-500\">all</span> execution environments.",
+  "fourthTextHtml": "<p>Union supports EVMs, SVMs and altVMs by integrating with all execution environments.</p>"
+}

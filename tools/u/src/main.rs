@@ -17,6 +17,7 @@ use unionlabs::primitives::{
 };
 
 pub mod arbitrum;
+pub mod base;
 pub mod codec;
 pub mod cometbft;
 pub mod deployments;
@@ -65,6 +66,8 @@ pub enum LogFormat {
 pub enum Cmd {
     #[command(visible_alias = "arb", subcommand)]
     Arbitrum(arbitrum::Cmd),
+    #[command(subcommand)]
+    Base(base::Cmd),
     #[command(subcommand)]
     Parlia(parlia::Cmd),
     #[command(visible_alias = "c", subcommand)]
@@ -124,6 +127,7 @@ async fn main() -> Result<()> {
 
     match app.cmd {
         Cmd::Arbitrum(cmd) => cmd.run().await,
+        Cmd::Base(cmd) => cmd.run().await,
         Cmd::Parlia(cmd) => cmd.run().await,
         Cmd::Codec(cmd) => cmd.run(),
         Cmd::Cometbft(cmd) => cmd.run().await,

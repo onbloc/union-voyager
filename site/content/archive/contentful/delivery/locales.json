@@ -1,0 +1,16 @@
+{
+  "total": 1,
+  "items": [
+    {
+      "code": "en-US",
+      "name": "English (United States)",
+      "default": true,
+      "fallbackCode": null,
+      "sys": {
+        "id": "2bFbob7CJ9ozFAHLli1Qnu",
+        "type": "Locale",
+        "version": 1
+      }
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+---
+title: "Union Partners with Native to Enable ZK-Bridging for Bitcoin"
+date: "2024-09-03"
+author: "Emir Beriker"
+description: "Union is partnering with Native to develop trust-minimized interoperability for the Bitcoin ecosystem."
+cover: "/content/assets/5Ok3wtqNb1CzZFSgzdzj8t/Union-X-Native.png"
+coverAlt: "Announcement graphic with Union and Native logos."
+hidden: false
+published: true
+sourceId: "7M0J87JgUfVds27m8pKJl2"
+createdAt: "2024-08-31T00:49:18.458Z"
+updatedAt: "2024-11-08T15:45:04.715Z"
+---
+<p>We are excited to announce our strategic partnership with <a href="https://www.gonative.cc/"><u>Native</u></a>, the Zero Trust native Bitcoin Application Platform, to enhance the Bitcoin ecosystem's security and efficiency. This collaboration will focus on developing trust-minimized bridges, enabling users to move assets across various Bitcoin Layer 2 (L2) solutions and the broader multi-chain ecosystem (such as Ethereum and Ethereum L2s) without the need for centralized intermediaries.</p>
+<h3>Unlocking the Potential of Bitcoin</h3>
+<p>Bitcoin, renowned as the world’s most secure and decentralized blockchain, has faced limitations due to its scripting capabilities, which restrict the development of sophisticated DeFi applications and other advanced financial instruments directly on the network. Although emerging Bitcoin L2 solutions aim to solve scalability and programmability issues, securely transferring assets between these solutions remains a challenge.</p>
+<p>Current Bitcoin bridges often depend on custodians or multisig setups, introducing significant risks related to centralization, political exposure, and potential security vulnerabilities. These setups conflict with the &quot;not your keys, not your coins&quot; principle, posing unacceptable risks for Bitcoin OGs, whales, institutions, and everyday Web3 users, and ultimately hindering their participation in DeFi and other decentralized applications.</p>
+<h3>Union and Native: A Partnership for Zero Trust Solutions</h3>
+<p>Union is dedicated to delivering decentralized, trust-minimized interoperability for Layer 1 blockchains and rollups across various ecosystems. Our bridges rely on consensus verification, eliminating the need for intermediaries, committees, or the assumption of an honest majority. This means that the security of funds is guaranteed by the underlying chains, rather than by the bridge. Leveraging efficient zero-knowledge cryptography and consensus verification, Union is at the forefront of cross-chain communication and interoperability, utilizing IBC.</p>
+<p>Through our partnership with Native, Union will extend its innovative technology to the Bitcoin ecosystem. Native's advanced Zero Trust Architecture, which leverages Two-Party Computation Multi-Party Computation (2PC-MPC) cryptography, ensures that users maintain full control over their Bitcoin assets without additional trust assumptions. Together, Union and Native will create a trust-minimized bridge that facilitates secure asset transfers across Bitcoin L2s without the need for trusted intermediaries or custodians.</p>
+<p>Robert, Co-Founder of Native, had this to say:</p>
+<blockquote><p><em>“Interchain Communication is essential for the future of web3 (DeFi, social, identities). Bitcoin, for a long time, was left beyond without a secure solution to serve the web3 world. Our partnership with Union is a significant step forward in ensuring that users can move their assets across networks with the highest level of security and decentralization. Together, we’re enabling a new era of trustless interoperability, confronting the risks of centralization and security vulnerabilities, and unlocking the huge potential of Bitcoin.”</em></p></blockquote>
+<h3>Key Benefits</h3>
+<p>This partnership will bring several benefits for users in the Bitcoin ecosystem and beyond:</p>
+<ul><li><p><strong>Enhanced Security</strong>: By integrating Native’s Zero Trust Architecture with Union’s modular interoperability, we provide a bridge solution that removes the need for centralized trust, significantly reducing the risk of asset loss due to centralization or security vulnerabilities.</p></li><li><p><strong>Investor Confidence</strong>: Union’s trust-minimized bridge offers large Bitcoin holders—including miners, whales, institutions, and family offices—the assurance to participate in DeFi and other decentralized applications with confidence, knowing their assets are secure.</p></li><li><p><strong>Unified Liquidity</strong>: The partnership also addresses the fragmented liquidity in the Bitcoin ecosystem. Native’s capabilities will help aggregate liquidity, providing a more seamless and efficient user experience.</p></li><li><p><strong>Broader Adoption</strong>: With enhanced security and unified liquidity, our combined solution will drive wider adoption of Bitcoin-based DeFi applications, expanding Bitcoin’s utility beyond just being a store of value.</p></li></ul>
+<p>Union Founder Karel Kubat said:</p>
+<blockquote><p><em>&quot;We're incredibly excited to play a pivotal role in unlocking the full potential of Bitcoin through our partnership with Native. By combining our modular interoperability layer with Native’s innovative Zero Trust Architecture, we are breaking down the barriers that have held Bitcoin back from fully integrating with the Web3 world. Native's cutting-edge technology and commitment to security are exactly what the Bitcoin ecosystem needs to thrive, and together, we are setting a new standard for trustless interoperability.&quot;</em></p></blockquote>
+<h3>Bitcoin Innovation</h3>
+<p>The partnership between Union and Native marks a pivotal moment in the evolution of the Bitcoin ecosystem. By tackling the critical challenges of trust, security, and liquidity, we are setting new standards for Bitcoin innovation. Together, we are not just filling existing gaps but creating a new paradigm for what is possible with Bitcoin.</p>
+<p>Stay tuned as we continue to develop and deliver these groundbreaking solutions to the Bitcoin community. The future of Bitcoin is trust-minimized, decentralized, and limitless—and with Union and Native, that future is closer than ever.</p>
+<p>For more information about Native, visit <a href="https://www.gonative.cc/">gonative.cc</a>.</p>

@@ -1,0 +1,23 @@
+{
+  "generatedAt": "2026-07-16T11:45:17.648Z",
+  "locale": "en-US",
+  "preview": {
+    "contentTypes": 25,
+    "entries": 393,
+    "assets": 379,
+    "locales": 1
+  },
+  "delivery": {
+    "contentTypes": 25,
+    "entries": 369,
+    "assets": 375,
+    "locales": 1
+  },
+  "downloadedAssets": 375,
+  "missingAssetFiles": [
+    "1cAN5gcbHAvPCu8pgVpilS",
+    "5D9VdZTNG7FMtuZIxJnDDW",
+    "5W7IfpHy3NAyX4K7DPPkJE",
+    "6fDU31XgwS7Vasv0JbdsSY"
+  ]
+}

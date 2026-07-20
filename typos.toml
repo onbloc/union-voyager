@@ -1,3 +1,8 @@
+default.extend-ignore-re = [
+  # Machine-generated Contentful references and paths are not natural language.
+  '"(?:sourceId|id|linkedSectionId|linkedSubsectionId|path|filename)":\s*"[^"]*"',
+  '^sourceId:\s*"[^"]*"$',
+]
 default.locale = "en-us"
 
 files.extend-exclude = [
@@ -33,8 +38,11 @@ files.extend-exclude = [
   "networks/genesis/union-testnet-8/**",
   "networks/genesis/union-testnet-9/**",
   "site/public/genesis.json",
+  "site/public/content/assets/**",
   "docs/public/genesis.json",
   "site/src/lib/abi/**",
+  # Preserve the final CMS export verbatim as a migration audit trail.
+  "site/content/archive/contentful/**",
   "docs/src/lib/abi/**",
   "typescript-sdk/scripts/**",
   "e2e/upgrades.nix",
@@ -68,6 +76,7 @@ files.extend-exclude = [
 "Axelar"                  = "Axelar"
 "BIGSERIAL"               = "BIGSERIAL"
 "BLOCKSCOUT"              = "BLOCKSCOUT"
+"BUIDL"                   = "BUIDL"
 "Bera"                    = "Bera"
 "Berachain"               = "Berachain"
 "Beriker"                 = "Beriker"
@@ -83,6 +92,7 @@ files.extend-exclude = [
 "CEST"                    = "CEST"
 "CFLAGS"                  = "CFLAGS"
 "CHAINSTACK"              = "CHAINSTACK"
+"CMO"                     = "CMO"
 "CMOV"                    = "CMOV"
 "Cascadia"                = "Cascadia"
 "Celestia"                = "Celestia"
@@ -93,6 +103,7 @@ files.extend-exclude = [
 "Codehash"                = "Codehash"
 "Coeff"                   = "Coeff"
 "Cofactor"                = "Cofactor"
+"Coffer"                  = "Coffer"
 "Configurator"            = "Configurator"
 "Connor"                  = "Connor"
 "Consolas"                = "Consolas"
@@ -190,6 +201,7 @@ files.extend-exclude = [
 "NIXBUILDNET"             = "NIXBUILDNET"
 "NJPFFHKJX"               = "NJPFFHKJX"
 "NSCYRR"                  = "NSCYRR"
+"Nativerse"               = "Nativerse"
 "Neue"                    = "Neue"
 "Ngtt"                    = "Ngtt"
 "Nmimt"                   = "Nmimt"
@@ -1153,7 +1165,6 @@ files.extend-exclude = [
 "reencode"                = "reencode"
 "reencoded"               = "reencoded"
 "reentrancy"              = "reentrancy"
-"reexcute"                = "reexcute"
 "reexecute"               = "reexecute"
 "reflectionv"             = "reflectionv"
 "regclass"                = "regclass"

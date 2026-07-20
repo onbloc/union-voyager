@@ -1,40 +1,16 @@
 ---
+import allEcosystemData from "#/content-data/ecosystem.json"
 import AnimationLayout from "#/layouts/AnimationLayout.astro"
-import { contentfulClient } from "#/lib/contentful/client.ts"
-import type { CategoryFields, EcosystemFields, EcosystemSkeleton } from "#/lib/contentful/types.ts"
 import ContainedSection from "../components/ContainedSection.astro"
 
-let ecosystemData: Array<EcosystemFields> | null = null
-let ecosystemCategories: Array<CategoryFields> | null = null
-let error: string | null = null
-
-try {
-  const ecosystemEntries = await contentfulClient.getEntries<EcosystemSkeleton>({
-    content_type: "ecosystem",
-  })
-
-  if (ecosystemEntries.items.length > 0) {
-    ecosystemData = ecosystemEntries.items
-      .map(item => item.fields)
-      .sort((a, b) => a.name?.localeCompare(b.name))
-
-    const allCategories = ecosystemData.flatMap(item => {
-      if (Array.isArray(item.category)) {
-        return item.category.map(cat => {
-          return cat.fields.category
-        })
-      }
-      return []
-    })
-
-    ecosystemCategories = Array.from(new Set(allCategories)).sort()
-  } else {
-    error = "No ecosystem data found."
-  }
-} catch (err) {
-  console.error("Error fetching Contentful data:", err)
-  error = "Failed to load content. Please try again later."
-}
+const ecosystemData = allEcosystemData.filter((item) =>
+  import.meta.env.PROD ? item.published : true
+)
+const ecosystemCategories = Array.from(
+  new Set(
+    ecosystemData.flatMap((item) => item.categories.map((category) => category.category)),
+  ),
+).sort()
 ---
 
 <AnimationLayout
@@ -140,7 +116,7 @@ try {
         >
           <div class="absolute z-10 bottom-0 inset-x-0 h-full bg-gradient-to-t from-black to-black/0" />
           <img
-            src={item.background.fields.file.url}
+            src={item.background?.path || ""}
             alt={item.name}
             class="absolute inset-0 w-full h-full object-cover object-center"
           />
@@ -149,13 +125,13 @@ try {
               <div class="flex flex-col gap-2 w-full items-start">
                 <div class="flex flex-col gap-2 items-start justify-start">
                   {
-                    item.category.map((cat) => (
+                    item.categories.map((category) => (
                       <div
                         class="text-xs whitespace-nowrap uppercase font-mono font-bold px-1.5"
                         id="card-cat"
-                        style={`background-color: ${cat.fields.bgColor}; color: ${cat.fields.textColor}`}
+                        style={`background-color: ${category.bgColor}; color: ${category.textColor}`}
                       >
-                        {cat.fields.category}
+                        {category.category}
                       </div>
                     ))
                   }
@@ -165,7 +141,7 @@ try {
                 </h3>
               </div>
               <img
-                src={item.logo.fields.file.url}
+                src={item.logo?.path || ""}
                 alt={`${item.name} logo`}
                 class="w-16 h-16 object-contain"
               />

@@ -15281,6 +15281,7 @@ dependencies = [
  "arbitrum-client",
  "arbitrum-light-client-types",
  "arbitrum-types",
+ "base-client",
  "base-light-client-types",
  "base64 0.22.1",
  "bcs",

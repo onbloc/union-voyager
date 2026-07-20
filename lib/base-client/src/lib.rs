@@ -65,7 +65,7 @@ pub async fn finalized_l2_block_of_game_index(
 
     let proxy = FaultDisputeGame::new(proxy_, &l1_provider);
     let block_number = proxy
-        .l2BlockNumber()
+        .l2SequenceNumber()
         .block(l1_block_number.into())
         .call()
         .await?;
@@ -90,6 +90,6 @@ sol! {
     }
 
     interface FaultDisputeGame {
-        function l2BlockNumber() returns (uint256 l2BlockNumber);
+        function l2SequenceNumber() returns (uint256 l2BlockNumber);
     }
 }

@@ -1,113 +1,64 @@
 ---
 import ContainedSection from "#/components/ContainedSection.astro"
 import TextP from "#/components/typography/TextP.astro"
+import roadmapContent from "#/content-data/roadmap.json"
 import AnimationLayout from "#/layouts/AnimationLayout.astro"
-import { contentfulClient } from "#/lib/contentful/client.ts"
-import type {
-  RoadmapMilestoneFields,
-  RoadmapMilestoneSkeleton,
-  RoadmapSectionFields,
-  RoadmapSectionSkeleton,
-  RoadmapSubsectionFields,
-  RoadmapSubsectionSkeleton,
-} from "#/lib/contentful/types.ts"
 
-export const prerender = false
-
-// Fetch all roadmap data from Contentful
-let sectionsData: any[] = []
-let subsectionsData: any[] = []
-let milestonesData: any[] = []
-let error: string | null = null
-
-try {
-  // Fetch all sections
-  const sectionsResponse = await contentfulClient.getEntries<RoadmapSectionSkeleton>({
-    content_type: "roadmapSection",
-    order: ["fields.position"],
-  })
-  sectionsData = sectionsResponse.items.map(item => ({
-    ...item.fields,
-    id: item.sys.id,
-  }))
-
-  // Fetch all subsections with linked sections
-  const subsectionsResponse = await contentfulClient.getEntries<RoadmapSubsectionSkeleton>({
-    content_type: "roadmapSubsection",
-    order: ["fields.position"],
-    include: 2,
-  })
-
-  subsectionsData = subsectionsResponse.items.map(item => {
-    // The linkedSection field contains the reference
-    const linkedSectionId = (item.fields.linkedSection as any)?.sys?.id
-    return {
-      ...item.fields,
-      id: item.sys.id,
-      linkedSectionId: linkedSectionId,
-    }
-  })
-
-  // Fetch all milestones with asset data
-  const milestonesResponse = await contentfulClient.getEntries<RoadmapMilestoneSkeleton>({
-    content_type: "roadmapMilestone",
-    order: ["fields.position"],
-    include: 3,
-    limit: 1000,
-  })
-
-  milestonesData = milestonesResponse.items.map(item => ({
-    ...item.fields,
-    id: item.sys.id,
-    linkedSubsectionId: item.fields.linkedSubsection?.sys?.id,
-    // Include the full asset objects
-    completeIcon: item.fields.completeIcon,
-    incompleteIcon: item.fields.incompleteIcon,
-  }))
-} catch (err) {
-  console.error("Error fetching roadmap data from Contentful:", err)
-  error = "Failed to load roadmap content. Please try again later."
-}
+const visible = (item: { published: boolean }) => import.meta.env.PROD ? item.published : true
+const sectionsData = roadmapContent.sections.filter(visible)
+const subsectionsData = roadmapContent.subsections.filter(visible)
+const milestonesData = roadmapContent.milestones.filter(visible)
+const error: string | null = null
 
 // Group data hierarchically
-const roadmapData = sectionsData.map(section => {
-  const sectionSubsections = subsectionsData
-    .filter(sub => sub.linkedSectionId === section.id)
-    .map(subsection => {
-      const subsectionMilestones = milestonesData
-        .filter(milestone => milestone.linkedSubsectionId === subsection.id)
-        .sort((a, b) => (a.position || 0) - (b.position || 0))
+const roadmapData = sectionsData
+  .map((section) => {
+    const sectionSubsections = subsectionsData
+      .filter((sub) => sub.linkedSectionId === section.id)
+      .map((subsection) => {
+        const subsectionMilestones = milestonesData
+          .filter((milestone) => milestone.linkedSubsectionId === subsection.id)
+          .sort((a, b) => (a.position || 0) - (b.position || 0))
 
-      return {
-        ...subsection,
-        milestones: subsectionMilestones,
-      }
-    })
-    .sort((a, b) => (a.position || 0) - (b.position || 0))
+        return {
+          ...subsection,
+          milestones: subsectionMilestones,
+        }
+      })
+      .sort((a, b) => (a.position || 0) - (b.position || 0))
 
-  return {
-    ...section,
-    subsections: sectionSubsections,
-  }
-}).sort((a, b) => (a.position || 0) - (b.position || 0))
+    return {
+      ...section,
+      subsections: sectionSubsections,
+    }
+  })
+  .sort((a, b) => (a.position || 0) - (b.position || 0))
 
 // Calculate overall progress
 const calculateProgress = (section: any) => {
-  if (section.percentComplete !== undefined && section.percentComplete !== null) {
+  if (
+    section.percentComplete !== undefined
+    && section.percentComplete !== null
+  ) {
     return section.percentComplete
   }
 
   if (section.subsections && section.subsections.length > 0) {
-    const totalProgress = section.subsections.reduce((acc: number, sub: any) => {
-      if (sub.percentComplete !== undefined && sub.percentComplete !== null) {
-        return acc + sub.percentComplete
-      }
-      if (sub.milestones && sub.milestones.length > 0) {
-        const completedMilestones = sub.milestones.filter((m: any) => m.markComplete).length
-        return acc + (completedMilestones / sub.milestones.length) * 100
-      }
-      return acc
-    }, 0)
+    const totalProgress = section.subsections.reduce(
+      (acc: number, sub: any) => {
+        if (sub.percentComplete !== undefined && sub.percentComplete !== null) {
+          return acc + sub.percentComplete
+        }
+        if (sub.milestones && sub.milestones.length > 0) {
+          const completedMilestones = sub.milestones.filter(
+            (m: any) => m.markComplete,
+          ).length
+          return acc + (completedMilestones / sub.milestones.length) * 100
+        }
+        return acc
+      },
+      0,
+    )
     return Math.round(totalProgress / section.subsections.length)
   }
 
@@ -116,13 +67,20 @@ const calculateProgress = (section: any) => {
 
 // Calculate subsection progress
 const calculateSubsectionProgress = (subsection: any) => {
-  if (subsection.percentComplete !== undefined && subsection.percentComplete !== null) {
+  if (
+    subsection.percentComplete !== undefined
+    && subsection.percentComplete !== null
+  ) {
     return subsection.percentComplete
   }
 
   if (subsection.milestones && subsection.milestones.length > 0) {
-    const completedMilestones = subsection.milestones.filter((m: any) => m.markComplete).length
-    return Math.round((completedMilestones / subsection.milestones.length) * 100)
+    const completedMilestones = subsection.milestones.filter(
+      (m: any) => m.markComplete,
+    ).length
+    return Math.round(
+      (completedMilestones / subsection.milestones.length) * 100,
+    )
   }
 
   return 0
@@ -170,7 +128,7 @@ const getStatusColor = (status: string) => {
           <div class="lg:hidden mb-6">
             <div class="bg-black p-4 border border-zinc-700 shadow-lg">
               <div class="flex items-center gap-2 mb-4 pb-2 border-b border-zinc-800">
-                <div class="w-1 h-1 bg-accent-500"></div>
+                <div class="w-1 h-1 bg-accent-500" />
                 <h3 class="font-mono uppercase text-sm font-semibold text-accent-500">
                   Navigation
                 </h3>
@@ -189,9 +147,9 @@ const getStatusColor = (status: string) => {
                           class="section-nav-item flex-1 text-left px-3 py-2 transition-all"
                         >
                           <div class="flex items-center gap-2">
-                            <span class="font-semibold text-sm font-mono uppercase">{
-                              section.section
-                            }</span>
+                            <span class="font-semibold text-sm font-mono uppercase">
+                              {section.section}
+                            </span>
                             <div class="flex items-center gap-1">
                               <div
                                 class={`w-2 h-2 ${
@@ -203,13 +161,15 @@ const getStatusColor = (status: string) => {
                                 }`}
                               >
                               </div>
-                              <span class="text-xs text-zinc-400">{sectionProgress}%</span>
+                              <span class="text-xs text-zinc-400">
+                                {sectionProgress}%
+                              </span>
                             </div>
                           </div>
                         </button>
                         {
-                          section.subsections && section.subsections.length > 0
-                            && (
+                          section.subsections
+                            && section.subsections.length > 0 && (
                             <button
                               data-toggle-section={section.id}
                               class="section-toggle p-2 transition-all"
@@ -217,7 +177,9 @@ const getStatusColor = (status: string) => {
                             >
                               <svg
                                 class="w-4 h-4 toggle-icon transition-transform duration-200 ease-linear"
-                                class:list={[sectionIndex === 0 ? "rotate-180" : ""]}
+                                class:list={[
+                                  sectionIndex === 0 ? "rotate-180" : "",
+                                ]}
                                 fill="currentColor"
                                 viewBox="0 0 20 20"
                               >
@@ -233,8 +195,8 @@ const getStatusColor = (status: string) => {
                       </div>
 
                       {
-                        section.subsections && section.subsections.length > 0
-                          && (
+                        section.subsections
+                          && section.subsections.length > 0 && (
                           <div
                             class="subsection-nav ml-4 mt-1 space-y-1 transition-all duration-300 ease-in-out overflow-hidden"
                             class:list={[sectionIndex === 0 ? "" : "hidden"]}
@@ -253,9 +215,9 @@ const getStatusColor = (status: string) => {
                                   class="subsection-nav-item w-full text-left px-3 py-1.5 transition-all text-sm hover:bg-zinc-800 block"
                                 >
                                   <div class="flex items-center justify-between w-full">
-                                    <span class="text-zinc-400 text-xs font-mono">{
-                                      subsection.subsection
-                                    }</span>
+                                    <span class="text-zinc-400 text-xs font-mono">
+                                      {subsection.subsection}
+                                    </span>
                                     <div class="flex items-center gap-1">
                                       <div
                                         class={`w-1.5 h-1.5 ${
@@ -267,9 +229,9 @@ const getStatusColor = (status: string) => {
                                         }`}
                                       >
                                       </div>
-                                      <span class="text-xs text-zinc-500">{
-                                          subsectionProgress
-                                        }%</span>
+                                      <span class="text-xs text-zinc-500">
+                                        {subsectionProgress}%
+                                      </span>
                                     </div>
                                   </div>
                                 </button>
@@ -292,7 +254,7 @@ const getStatusColor = (status: string) => {
             <aside class="roadmap-sidebar w-80 flex-shrink-0 hidden lg:block sticky top-4 self-start">
               <div class="bg-black p-4 border border-zinc-700 shadow-lg max-h-[calc(100vh-2rem)] overflow-y-auto">
                 <div class="flex items-center gap-2 mb-4 pb-2 border-b border-zinc-800">
-                  <div class="w-1 h-1 bg-accent-500"></div>
+                  <div class="w-1 h-1 bg-accent-500" />
                   <h3 class="font-mono uppercase text-sm font-semibold text-accent-500">
                     Navigation
                   </h3>
@@ -311,9 +273,9 @@ const getStatusColor = (status: string) => {
                             class="section-nav-item flex-1 text-left px-3 py-2 transition-all"
                           >
                             <div class="flex items-center gap-2">
-                              <span class="font-semibold text-sm font-mono uppercase">{
-                                section.section
-                              }</span>
+                              <span class="font-semibold text-sm font-mono uppercase">
+                                {section.section}
+                              </span>
                               <div class="flex items-center gap-1">
                                 <div
                                   class={`w-2 h-2 ${
@@ -325,13 +287,15 @@ const getStatusColor = (status: string) => {
                                   }`}
                                 >
                                 </div>
-                                <span class="text-xs text-zinc-400">{sectionProgress}%</span>
+                                <span class="text-xs text-zinc-400">
+                                  {sectionProgress}%
+                                </span>
                               </div>
                             </div>
                           </button>
                           {
-                            section.subsections && section.subsections.length > 0
-                              && (
+                            section.subsections
+                              && section.subsections.length > 0 && (
                               <button
                                 data-toggle-section={section.id}
                                 class="section-toggle p-2 transition-all"
@@ -339,7 +303,9 @@ const getStatusColor = (status: string) => {
                               >
                                 <svg
                                   class="w-4 h-4 toggle-icon transition-transform duration-200 ease-linear"
-                                  class:list={[sectionIndex === 0 ? "rotate-180" : ""]}
+                                  class:list={[
+                                    sectionIndex === 0 ? "rotate-180" : "",
+                                  ]}
                                   fill="currentColor"
                                   viewBox="0 0 20 20"
                                 >
@@ -355,8 +321,8 @@ const getStatusColor = (status: string) => {
                         </div>
 
                         {
-                          section.subsections && section.subsections.length > 0
-                            && (
+                          section.subsections
+                            && section.subsections.length > 0 && (
                             <div
                               class="subsection-nav ml-4 mt-1 space-y-1 transition-all duration-300 ease-in-out overflow-hidden"
                               class:list={[sectionIndex === 0 ? "" : "hidden"]}
@@ -375,23 +341,24 @@ const getStatusColor = (status: string) => {
                                     class="subsection-nav-item w-full text-left px-3 py-1.5 transition-all text-sm hover:bg-zinc-800 block"
                                   >
                                     <div class="flex items-center justify-between w-full">
-                                      <span class="text-zinc-400 text-xs font-mono">{
-                                        subsection.subsection
-                                      }</span>
+                                      <span class="text-zinc-400 text-xs font-mono">
+                                        {subsection.subsection}
+                                      </span>
                                       <div class="flex items-center gap-1">
                                         <div
                                           class={`w-1.5 h-1.5 ${
                                             subsectionStatus === "completed"
                                               ? "bg-accent-500"
-                                              : subsectionStatus === "in-progress"
+                                              : subsectionStatus
+                                                  === "in-progress"
                                               ? "bg-white"
                                               : "bg-zinc-600"
                                           }`}
                                         >
                                         </div>
-                                        <span class="text-xs text-zinc-500">{
-                                            subsectionProgress
-                                          }%</span>
+                                        <span class="text-xs text-zinc-500">
+                                          {subsectionProgress}%
+                                        </span>
                                       </div>
                                     </div>
                                   </button>
@@ -444,14 +411,17 @@ const getStatusColor = (status: string) => {
                             >
                             </div>
                           </div>
-                          <span class="text-sm text-zinc-400">{sectionProgress}%</span>
+                          <span class="text-sm text-zinc-400">
+                            {sectionProgress}%
+                          </span>
                         </div>
                       </div>
 
                       {/* Subsections */}
                       <div class="subsections-container space-y-6">
                         {
-                          section.subsections && section.subsections.length > 0
+                          section.subsections
+                              && section.subsections.length > 0
                             ? (
                               section.subsections.map((subsection: any) => {
                                 const subsectionProgress = calculateSubsectionProgress(
@@ -497,7 +467,9 @@ const getStatusColor = (status: string) => {
                                       >
                                       </div>
                                     </div>
-                                    <span class="text-xs text-zinc-500">{subsectionProgress}%</span>
+                                    <span class="text-xs text-zinc-500">
+                                      {subsectionProgress}%
+                                    </span>
                                   </div>
                                 </div>
 
@@ -512,9 +484,8 @@ const getStatusColor = (status: string) => {
                                       ? (
                                       <ul class="space-y-2">
                                         {
-                                          subsection.milestones.map((
-                                            milestone: any,
-                                          ) => (
+                                          subsection.milestones.map(
+                                            (milestone: any) => (
                                             <li class="flex items-start gap-4">
                                               {
                                                                             /* Display the appropriate icon based on completion status */
@@ -522,15 +493,11 @@ const getStatusColor = (status: string) => {
                                               {
                                                 milestone.markComplete
                                                   ? (
-                                                    milestone.completeIcon?.fields?.file
-                                                        ?.url
+                                                    milestone.completeIcon?.path
                                                       ? (
                                                   <img
-                                                    src={milestone.completeIcon.fields.file.url
-                                                        .startsWith("//")
-                                                      ? `https:${milestone.completeIcon.fields.file.url}`
-                                                      : milestone.completeIcon.fields.file
-                                                        .url}
+                                                    src={milestone.completeIcon
+                                                      .path}
                                                     alt="Complete"
                                                     class="w-6 h-6 mt-0.5 flex-shrink-0"
                                                   />
@@ -539,25 +506,18 @@ const getStatusColor = (status: string) => {
                                                   <div class="w-6 h-6 mt-0.5 flex-shrink-0 bg-green-500" />
                                                 )
                                                 )
-                                                : (
-                                                  milestone.incompleteIcon?.fields
-                                                      ?.file
-                                                      ?.url
-                                                    ? (
+                                                : milestone.incompleteIcon
+                                                    ?.path
+                                                ? (
                                                   <img
-                                                    src={milestone.incompleteIcon.fields.file
-                                                        .url
-                                                        .startsWith("//")
-                                                      ? `https:${milestone.incompleteIcon.fields.file.url}`
-                                                      : milestone.incompleteIcon.fields.file
-                                                        .url}
+                                                    src={milestone.incompleteIcon
+                                                      .path}
                                                     alt="Incomplete"
                                                     class="w-6 h-6 mt-0.5 flex-shrink-0 opacity-50"
                                                   />
                                                 )
                                                 : (
                                                   <div class="w-6 h-6 mt-0.5 flex-shrink-0 border-2 border-zinc-400" />
-                                                )
                                                 )
                                               }
                                               <div class="flex-1">
@@ -571,8 +531,7 @@ const getStatusColor = (status: string) => {
                                                   {milestone.milestone}
                                                 </span>
                                                 {
-                                                  milestone.description
-                                                    && (
+                                                  milestone.description && (
                                                     <p class="text-sm text-zinc-600 mt-1">
                                                       {milestone.description}
                                                     </p>
@@ -580,7 +539,8 @@ const getStatusColor = (status: string) => {
                                                 }
                                               </div>
                                             </li>
-                                          ))
+                                          ),
+                                          )
                                         }
                                       </ul>
                                     )
@@ -619,35 +579,39 @@ const getStatusColor = (status: string) => {
 <script>
 function initializeNavigation() {
   function toggleSection(sectionId: string) {
-    const subsectionsContainers = document.querySelectorAll(`[data-subsections="${sectionId}"]`)
+    const subsectionsContainers = document.querySelectorAll(
+      `[data-subsections="${sectionId}"]`,
+    )
     const toggleIcons = document.querySelectorAll(
       `[data-toggle-section="${sectionId}"] .toggle-icon`,
     )
 
     if (subsectionsContainers.length > 0 && toggleIcons.length > 0) {
-      const isAnyVisible = Array.from(subsectionsContainers).some(container =>
-        !container.classList.contains("hidden")
+      const isAnyVisible = Array.from(subsectionsContainers).some(
+        (container) => !container.classList.contains("hidden"),
       )
 
       if (!isAnyVisible) {
-        document.querySelectorAll("[data-subsections]").forEach(container => {
-          container.classList.add("hidden")
-        })
-        document.querySelectorAll(".toggle-icon").forEach(icon => {
+        document
+          .querySelectorAll("[data-subsections]")
+          .forEach((container) => {
+            container.classList.add("hidden")
+          })
+        document.querySelectorAll(".toggle-icon").forEach((icon) => {
           icon.classList.remove("rotate-180")
         })
 
-        subsectionsContainers.forEach(container => {
+        subsectionsContainers.forEach((container) => {
           container.classList.remove("hidden")
         })
-        toggleIcons.forEach(icon => {
+        toggleIcons.forEach((icon) => {
           icon.classList.add("rotate-180")
         })
       } else {
-        subsectionsContainers.forEach(container => {
+        subsectionsContainers.forEach((container) => {
           container.classList.add("hidden")
         })
-        toggleIcons.forEach(icon => {
+        toggleIcons.forEach((icon) => {
           icon.classList.remove("rotate-180")
         })
       }
@@ -656,26 +620,28 @@ function initializeNavigation() {
 
   // Clean up existing event listeners by cloning elements
   const toggleButtons = document.querySelectorAll(".section-toggle")
-  toggleButtons.forEach(button => {
+  toggleButtons.forEach((button) => {
     const newButton = button.cloneNode(true) as HTMLElement
     button.parentNode?.replaceChild(newButton, button)
   })
 
   const sectionNavItems = document.querySelectorAll(".section-nav-item")
-  sectionNavItems.forEach(item => {
+  sectionNavItems.forEach((item) => {
     const newItem = item.cloneNode(true) as HTMLElement
     item.parentNode?.replaceChild(newItem, item)
   })
 
-  const subsectionNavItems = document.querySelectorAll(".subsection-nav-item")
-  subsectionNavItems.forEach(item => {
+  const subsectionNavItems = document.querySelectorAll(
+    ".subsection-nav-item",
+  )
+  subsectionNavItems.forEach((item) => {
     const newItem = item.cloneNode(true) as HTMLElement
     item.parentNode?.replaceChild(newItem, item)
   })
 
   // Get fresh references and add event listeners
   const newToggleButtons = document.querySelectorAll(".section-toggle")
-  newToggleButtons.forEach(button => {
+  newToggleButtons.forEach((button) => {
     button.addEventListener("click", (e) => {
       e.stopPropagation()
       const sectionId = button.getAttribute("data-toggle-section")
@@ -684,10 +650,12 @@ function initializeNavigation() {
   })
 
   const newSectionNavItems = document.querySelectorAll(".section-nav-item")
-  newSectionNavItems.forEach(item => {
+  newSectionNavItems.forEach((item) => {
     item.addEventListener("click", () => {
       const sectionId = item.getAttribute("data-section-id")
-      const sectionElement = document.querySelector(`[data-section="${sectionId}"]`)
+      const sectionElement = document.querySelector(
+        `[data-section="${sectionId}"]`,
+      )
 
       if (sectionElement) {
         const rect = sectionElement.getBoundingClientRect()
@@ -704,12 +672,16 @@ function initializeNavigation() {
     })
   })
 
-  const newSubsectionNavItems = document.querySelectorAll(".subsection-nav-item")
-  newSubsectionNavItems.forEach(item => {
+  const newSubsectionNavItems = document.querySelectorAll(
+    ".subsection-nav-item",
+  )
+  newSubsectionNavItems.forEach((item) => {
     item.addEventListener("click", (e) => {
       e.stopPropagation()
       const subsectionId = item.getAttribute("data-subsection-id")
-      const subsectionElement = document.querySelector(`[data-subsection="${subsectionId}"]`)
+      const subsectionElement = document.querySelector(
+        `[data-subsection="${subsectionId}"]`,
+      )
 
       if (subsectionElement) {
         const rect = subsectionElement.getBoundingClientRect()
@@ -724,15 +696,19 @@ function initializeNavigation() {
         const parentSection = item.closest(".section-nav")
         const parentSectionContainer = parentSection?.querySelector(".flex")
         if (parentSectionContainer) {
-          document.querySelectorAll(".section-nav .flex").forEach(navContainer => {
-            navContainer.classList.remove("bg-zinc-800")
-          })
+          document
+            .querySelectorAll(".section-nav .flex")
+            .forEach((navContainer) => {
+              navContainer.classList.remove("bg-zinc-800")
+            })
           parentSectionContainer.classList.add("bg-zinc-800")
         }
 
-        document.querySelectorAll(".subsection-nav-item").forEach(navItem => {
-          navItem.classList.remove("bg-zinc-800")
-        })
+        document
+          .querySelectorAll(".subsection-nav-item")
+          .forEach((navItem) => {
+            navItem.classList.remove("bg-zinc-800")
+          })
         item.classList.add("bg-zinc-800")
       }
     })
@@ -760,7 +736,6 @@ initializeNavigation()
   min-width: 20rem;
 }
 
-
 .roadmap-sidebar nav::-webkit-scrollbar {
   width: 6px;
 }
@@ -779,13 +754,11 @@ initializeNavigation()
   background: rgba(255, 255, 255, 0.2);
 }
 
-
-
 @media (max-width: 1024px) {
   .roadmap-layout {
     flex-direction: column;
   }
-  
+
   .roadmap-sidebar {
     display: none;
   }
