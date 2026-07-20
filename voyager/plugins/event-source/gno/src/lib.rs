@@ -650,7 +650,6 @@ impl Module {
                 channel_id,
                 counterparty_port_id,
                 counterparty_channel_id: _, // THIS WILL BE ZERO
-                connection_id: _,
                 connection_client_id,
                 connection_counterparty_client_id,
                 connection_counterparty_connection_id,
@@ -698,7 +697,6 @@ impl Module {
                 channel_id,
                 counterparty_port_id,
                 counterparty_channel_id,
-                connection_id: _,
                 connection_client_id,
                 connection_counterparty_client_id,
                 connection_counterparty_connection_id,
@@ -747,7 +745,6 @@ impl Module {
                 channel_id,
                 counterparty_port_id,
                 counterparty_channel_id,
-                connection_id: _,
                 connection_client_id,
                 connection_counterparty_client_id,
                 connection_counterparty_connection_id,
@@ -797,7 +794,6 @@ impl Module {
                 channel_id,
                 counterparty_port_id,
                 counterparty_channel_id,
-                connection_id: _,
                 connection_client_id,
                 connection_counterparty_client_id,
                 connection_counterparty_connection_id,
@@ -842,15 +838,9 @@ impl Module {
                 )))
             }
             IbcEvent::PacketSend {
-                packet_hash: _,
                 packet_data,
                 source_channel_id,
-                source_channel_version: _,
-                source_connection_id: _,
-                source_connection_client_id: _,
                 destination_channel_id,
-                destination_connection_id: _,
-                destination_connection_client_id: _,
                 timeout_timestamp,
             } => {
                 let packet = Packet {
@@ -944,9 +934,8 @@ impl Module {
                 )))
             }
             IbcEvent::BatchSend {
-                channel_id,
-                packet_hash: _,
                 batch_hash,
+                channel_id,
             } => {
                 let source_channel = voyager_client
                     .query_ibc_state(
@@ -1014,15 +1003,7 @@ impl Module {
             IbcEvent::PacketAck {
                 packet_hash,
                 source_channel_id,
-                source_connection_id: _,
-                source_connection_client_id: _,
-                destination_channel_id: _,
-                destination_channel_version: _,
-                destination_connection_id: _,
-                destination_connection_client_id: _,
-                timeout_timestamp: _,
                 acknowledgement,
-                maker: _,
             } => {
                 let packet = voyager_client
                     .query(
@@ -1196,15 +1177,7 @@ impl Module {
             }
             IbcEvent::WriteAck {
                 packet_hash,
-                packet_data: _,
-                source_channel_id: _,
-                source_connection_id: _,
-                source_connection_client_id: _,
                 destination_channel_id,
-                destination_channel_version: _,
-                destination_connection_id: _,
-                destination_connection_client_id: _,
-                timeout_timestamp: _,
                 acknowledgement,
             } => {
                 let destination_channel = voyager_client
