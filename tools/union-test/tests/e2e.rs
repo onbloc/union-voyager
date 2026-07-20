@@ -170,6 +170,12 @@ async fn ensure_channels_opened(channel_count: usize) {
 }
 
 #[tokio::test]
+async fn test_open_channels_only() {
+    let t = init_ctx().await;
+    ensure_channels_opened(t.ctx.channel_count).await;
+}
+
+#[tokio::test]
 async fn test_send_vault_success() {
     let t = init_ctx().await;
 
