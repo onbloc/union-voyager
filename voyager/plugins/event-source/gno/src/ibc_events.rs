@@ -62,6 +62,7 @@ pub enum IbcEvent {
     },
 
     BatchSend {
+        packet_hash: H256,
         batch_hash: H256,
         channel_id: ChannelId,
     },
@@ -224,6 +225,7 @@ impl IbcEvent {
                 timeout_timestamp: attr(&attrs, "timeout_timestamp")?,
             },
             "BatchSend" => IbcEvent::BatchSend {
+                packet_hash: attr(&attrs, "packet_hash")?,
                 batch_hash: attr(&attrs, "batch_hash")?,
                 channel_id: attr(&attrs, "channel_id")?,
             },

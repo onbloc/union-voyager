@@ -350,6 +350,10 @@ impl Module {
         // list of MakeChainEvent ops that will be queued in a conc
         let mut make_chain_event_ops: Vec<Op<VoyagerMessage>> = vec![];
 
+        // gno emits one BatchSend event per packet in the batch, all sharing the same
+        // (channel_id, batch_hash); only the first one seen should produce a ChainEvent.
+        let mut seen_batches = BTreeSet::new();
+
         let mut handle_event = |event: gno_rpc::types::Event, tx_hash| -> RpcResult<()> {
             trace!(?event, "observed event");
 
@@ -368,23 +372,18 @@ impl Module {
             };
 
             let make_chain_event = || {
-                // if event.is_trivial() && !self.index_trivial_events {
-                //     debug!("not indexing trivial event");
-                //     None
-                // } else {
-                // let event = match event.event {
-                //     IbcEvent::BatchSend {
-                //     } => {
-                //         debug!(%packet_hash, %batch_hash, %channel_id, "found batch send event");
-                //         if seen_batches.insert((channel_id, batch_hash)) {
-                //             info!(%batch_hash, %channel_id, "found batch send event");
-                //             event.clone()
-                //         } else {
-                //             return None;
-                //         }
-                //     }
-                //     _ => event.clone(),
-                // };
+                if let IbcEvent::BatchSend {
+                    channel_id,
+                    batch_hash,
+                    packet_hash,
+                } = &event
+                {
+                    debug!(%packet_hash, %batch_hash, %channel_id, "found batch send event");
+                    if !seen_batches.insert((channel_id.clone(), batch_hash.clone())) {
+                        return None;
+                    }
+                }
+
                 Some(call(PluginMessage::new(
                     self.plugin_name(),
                     ModuleCall::from(MakeChainEvent {
@@ -393,7 +392,6 @@ impl Module {
                         event,
                     }),
                 )))
-                // }
             };
 
             if let Some(e) = make_chain_event() {
@@ -934,6 +932,7 @@ impl Module {
                 )))
             }
             IbcEvent::BatchSend {
+                packet_hash: _,
                 batch_hash,
                 channel_id,
             } => {
