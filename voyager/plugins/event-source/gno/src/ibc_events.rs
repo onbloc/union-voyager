@@ -55,6 +55,7 @@ pub enum IbcEvent {
     ChannelOpenConfirm(ChannelEvent),
 
     PacketSend {
+        packet_hash: H256,
         packet_data: Bytes,
         source_channel_id: ChannelId,
         destination_channel_id: ChannelId,
@@ -221,6 +222,7 @@ impl IbcEvent {
                 maker_msg: chunked_attr(&attrs, "maker_msg")?,
             },
             "PacketSend" => IbcEvent::PacketSend {
+                packet_hash: attr(&attrs, "packet_hash")?,
                 packet_data: chunked_attr(&attrs, "packet_data")?,
                 source_channel_id: attr(&attrs, "source_channel_id")?,
                 destination_channel_id: attr(&attrs, "destination_channel_id")?,

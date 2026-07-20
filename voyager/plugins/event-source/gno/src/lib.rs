@@ -836,6 +836,7 @@ impl Module {
                 )))
             }
             IbcEvent::PacketSend {
+                packet_hash: _,
                 packet_data,
                 source_channel_id,
                 destination_channel_id,
