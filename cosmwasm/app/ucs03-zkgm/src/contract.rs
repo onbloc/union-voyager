@@ -12,6 +12,7 @@ use cosmwasm_std::{
     SubMsgResponse, SubMsgResult, Uint128, Uint256, WasmMsg, WasmQuery, instantiate2_address,
     to_json_binary, to_json_string, wasm_execute,
 };
+use cw_utils::parse_execute_response_data;
 use frissitheto::{UpgradeError, UpgradeMsg};
 use ibc_union_msg::{
     module::IbcUnionMsg,
@@ -2600,21 +2601,24 @@ pub fn reply(mut deps: DepsMut, env: Env, reply: Reply) -> Result<Response, Cont
         // Without this reply handling, we would lose track of forwarded packets.
         FORWARD_REPLY_ID => {
             if let SubMsgResult::Ok(reply_data) = reply.result {
-                let sent_packet = serde_json_wasm::from_slice::<Packet>(
-                    #[allow(deprecated)]
-                    reply_data.data.clone().unwrap_or_default().as_slice(),
-                )
-                .map_err(|error| ContractError::CouldNotDeserializeSentPacket {
-                    error,
-                    #[allow(deprecated)]
-                    sent_packet_data: Vec::from(reply_data.data.unwrap_or_default()).into(),
-                })?;
+                #[allow(deprecated)]
+                let response_data = reply_data.data.unwrap_or_default();
+                let sent_packet_data = parse_execute_response_data(response_data.as_slice())
+                    .map_err(|error| StdError::generic_err(error.to_string()))?
+                    .data
+                    .unwrap_or_default();
+                let sent_packet = serde_json_wasm::from_slice::<Packet>(&sent_packet_data)
+                    .map_err(|error| ContractError::CouldNotDeserializeSentPacket {
+                        error,
+                        sent_packet_data: Vec::from(sent_packet_data).into(),
+                    })?;
                 let commitment_key =
                     BatchPacketsPath::from_packets(slice::from_ref(&sent_packet)).key();
+                let parent_packet = EXECUTING_PACKET.load(deps.storage)?;
                 IN_FLIGHT_PACKET.save(
                     deps.storage,
                     commitment_key.into_bytes().into(),
-                    &sent_packet,
+                    &parent_packet,
                 )?;
                 Ok(Response::new())
             } else {

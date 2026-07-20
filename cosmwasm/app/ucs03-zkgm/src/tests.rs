@@ -3,8 +3,8 @@ use alloy_primitives::{U256, keccak256};
 use alloy_sol_types::SolValue;
 use cosmwasm_std::{
     Addr, Binary, Checksum, CodeInfoResponse, Coin, Coins, ContractResult, Deps, DepsMut, Empty,
-    Env, MessageInfo, OwnedDeps, Querier, QuerierResult, Response, StdError, StdResult, Uint128,
-    Uint256,
+    Env, MessageInfo, OwnedDeps, Querier, QuerierResult, Reply, Response, StdError, StdResult,
+    SubMsgResponse, SubMsgResult, Uint128, Uint256,
     testing::{MockApi, MockQuerier, MockStorage, message_info, mock_dependencies, mock_env},
     to_json_binary, to_json_vec, wasm_execute,
 };
@@ -13,7 +13,10 @@ use cw_storage_plus::Map;
 use cw20::{Cw20Coin, Cw20QueryMsg, TokenInfoResponse};
 use cw20_token_minter::contract::{Cw20TokenMinterImplementation, save_native_token};
 use ibc_union_msg::module::IbcUnionMsg;
-use ibc_union_spec::{ChannelId, ConnectionId, MustBeZero, Packet, path::commit_packets};
+use ibc_union_spec::{
+    ChannelId, ConnectionId, MustBeZero, Packet,
+    path::{BatchPacketsPath, commit_packets},
+};
 use pausable::WhenNotPaused;
 use unionlabs_primitives::{Bytes, H256};
 
@@ -27,16 +30,17 @@ use crate::{
         TokenOrderV2, ZkgmPacket,
     },
     contract::{
-        PROTOCOL_VERSION, dequeue_channel_from_path, execute, increase_channel_balance_v2,
-        instantiate, is_forwarded_packet, migrate, pop_channel_from_path, query, reply,
-        reverse_channel_path, tint_forward_salt, update_channel_path, verify_batch, verify_call,
-        verify_forward, verify_internal, verify_token_order_v2,
+        FORWARD_REPLY_ID, PROTOCOL_VERSION, dequeue_channel_from_path, execute,
+        increase_channel_balance_v2, instantiate, is_forwarded_packet, migrate,
+        pop_channel_from_path, query, reply, reverse_channel_path, tint_forward_salt,
+        update_channel_path, verify_batch, verify_call, verify_forward, verify_internal,
+        verify_token_order_v2,
     },
     msg::{
         Config, ExecuteMsg, InitMsg, PredictWrappedTokenResponse, QueryMsg, RestrictedExecuteMsg,
         TokenMinterInitParams,
     },
-    state::{CHANNEL_BALANCE_V2, CONFIG, TOKEN_ORIGIN},
+    state::{CHANNEL_BALANCE_V2, CONFIG, EXECUTING_PACKET, IN_FLIGHT_PACKET, TOKEN_ORIGIN},
 };
 
 const DEFAULT_IBC_HOST: &str = "blabla";
@@ -46,6 +50,64 @@ const DESTINATION_CHANNEL_ID: ChannelId = ChannelId!(2);
 const AMOUNT: u128 = 10;
 const TOKEN: &str = "au";
 const PREDICT_TOKEN: &str = "union1xlzyzcerp2r3dd8w877j0uqnhjllkhv22ahevl";
+
+#[test]
+fn test_forward_reply_stores_parent_packet() {
+    let mut deps = mock_dependencies();
+    let env = mock_env();
+    let parent = Packet {
+        source_channel_id: SOURCE_CHANNEL_ID,
+        destination_channel_id: DESTINATION_CHANNEL_ID,
+        data: b"parent".into(),
+        timeout_height: MustBeZero,
+        timeout_timestamp: Default::default(),
+    };
+    let child = Packet {
+        source_channel_id: DESTINATION_CHANNEL_ID,
+        destination_channel_id: SOURCE_CHANNEL_ID,
+        data: b"child".into(),
+        timeout_height: MustBeZero,
+        timeout_timestamp: Default::default(),
+    };
+    EXECUTING_PACKET
+        .save(deps.as_mut().storage, &parent)
+        .unwrap();
+
+    let child_data = serde_json_wasm::to_vec(&child).unwrap();
+    let mut response_data = vec![0x0a];
+    let mut len = child_data.len();
+    while len >= 0x80 {
+        response_data.push((len as u8) | 0x80);
+        len >>= 7;
+    }
+    response_data.push(len as u8);
+    response_data.extend(child_data);
+
+    reply(
+        deps.as_mut(),
+        env,
+        Reply {
+            id: FORWARD_REPLY_ID,
+            payload: Binary::default(),
+            gas_used: 0,
+            result: SubMsgResult::Ok(SubMsgResponse {
+                events: vec![],
+                #[expect(deprecated, reason = "need to construct this type somehow")]
+                data: Some(response_data.into()),
+                msg_responses: vec![],
+            }),
+        },
+    )
+    .unwrap();
+
+    let key = BatchPacketsPath::from_packets(&[child]).key();
+    assert_eq!(
+        IN_FLIGHT_PACKET
+            .load(deps.as_ref().storage, key.into_bytes().into())
+            .unwrap(),
+        parent
+    );
+}
 
 #[test]
 fn test_dequeue_channel_from_path_ok_1() {

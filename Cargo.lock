@@ -15360,6 +15360,7 @@ dependencies = [
  "cw-account",
  "cw-multi-test",
  "cw-storage-plus",
+ "cw-utils",
  "cw20",
  "cw20-base",
  "cw20-token-minter",

@@ -22,6 +22,7 @@ cosmwasm-event              = { workspace = true }
 cosmwasm-std                = { workspace = true, features = ["cosmwasm_1_2", "cosmwasm_1_4", "staking"] }
 cw-account                  = { workspace = true }
 cw-storage-plus             = { workspace = true }
+cw-utils                    = { workspace = true }
 embed-commit                = { workspace = true }
 frissitheto                 = { workspace = true }
 ibc-union-msg               = { workspace = true }
