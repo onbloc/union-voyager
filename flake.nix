@@ -454,7 +454,7 @@
                 validatorCount = 4;
                 ethereum = {
                   beacon = {
-                    validatorCount = 1;
+                    validatorCount = 8;
                   };
                 };
               };

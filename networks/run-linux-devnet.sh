@@ -35,6 +35,7 @@ case "$system" in
     exit 2
     ;;
 esac
+cache_volume="union-nix-cache-$system"
 
 docker_args=(--rm)
 if [ -t 0 ] && [ -t 1 ]; then
@@ -46,6 +47,7 @@ exec docker run "${docker_args[@]}" \
   -v "$repo_root:/work/union" \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v "$volume:/nix" \
+  -v "$cache_volume:/root/.cache/nix" \
   -w /work/union \
   -e TARGET="$target" \
   -e NO_BLOCKSCOUT="$no_blockscout" \

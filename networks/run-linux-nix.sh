@@ -22,12 +22,14 @@ case "$system" in
     exit 2
     ;;
 esac
+cache_volume="union-nix-cache-$system"
 
 exec docker run --rm \
   --platform "$platform" \
   --network host \
   -v "$repo_root:/work/union" \
   -v "$volume:/nix" \
+  -v "$cache_volume:/root/.cache/nix" \
   -w /work/union \
   -e TARGET="$target" \
   -e NIX_CONFIG="experimental-features = nix-command flakes" \

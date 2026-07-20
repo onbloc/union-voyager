@@ -99,7 +99,8 @@ in
       test = [
         "CMD-SHELL"
         ''
-          curl -f http://localhost:9596/eth/v2/beacon/blocks/3 || exit 1
+          curl -fsS http://localhost:9596/eth/v1/beacon/headers/head \
+            | jq -e '.data.header.message.slot | tonumber > 8' >/dev/null
         ''
       ];
     };
