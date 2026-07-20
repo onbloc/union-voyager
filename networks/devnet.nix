@@ -302,7 +302,18 @@
             inherit name;
             runtimeInputs = [ arion ];
             text = ''
-              arion --prebuilt-file ${build.${name}} up --build --force-recreate -V --always-recreate-deps --remove-orphans
+              case "''${DEVNET_ACTION:-up}" in
+                up)
+                  arion --prebuilt-file ${build.${name}} up -d --build --force-recreate -V --always-recreate-deps --remove-orphans
+                  ;;
+                down)
+                  arion --prebuilt-file ${build.${name}} down -v --remove-orphans
+                  ;;
+                *)
+                  echo "invalid DEVNET_ACTION=''${DEVNET_ACTION}" >&2
+                  exit 2
+                  ;;
+              esac
             '';
           }
         );

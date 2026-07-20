@@ -6,11 +6,20 @@ system="${DEVNET_LINUX_SYSTEM:-aarch64-linux}"
 target="${DEVNET_TARGET:-full-dev-setup}"
 no_blockscout="${NO_BLOCKSCOUT:-true}"
 project_name="${DEVNET_PROJECT_NAME:-full-dev-setup}"
+action="${DEVNET_ACTION:-up}"
 
 if [[ ! "$project_name" =~ ^[a-z0-9][a-z0-9_-]*$ ]]; then
   echo "invalid DEVNET_PROJECT_NAME=$project_name" >&2
   exit 2
 fi
+
+case "$action" in
+  up|down) ;;
+  *)
+    echo "invalid DEVNET_ACTION=$action; use up or down" >&2
+    exit 2
+    ;;
+esac
 
 case "$system" in
   aarch64-linux)
@@ -41,9 +50,10 @@ exec docker run "${docker_args[@]}" \
   -e TARGET="$target" \
   -e NO_BLOCKSCOUT="$no_blockscout" \
   -e DEVNET_PROJECT_NAME="$project_name" \
+  -e DEVNET_ACTION="$action" \
   -e NIX_CONFIG="experimental-features = nix-command flakes" \
   nixos/nix:latest \
   sh -lc 'nix --accept-flake-config shell nixpkgs#docker-client nixpkgs#git -c sh -lc '"'"'
     git config --global --add safe.directory /work/union
-    nix --accept-flake-config --impure run ".#$TARGET"
+    nix --accept-flake-config run --impure ".#$TARGET"
   '"'"''
