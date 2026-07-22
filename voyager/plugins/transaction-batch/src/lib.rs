@@ -183,7 +183,11 @@ impl ClientConfigs {
                     serde_json::to_string(&many.keys().map(|k| (k, ())).collect::<HashMap<_, _>>())
                         .unwrap();
 
-                format!("{clients_json} | has($client_id)")
+                // $client_id is bound from the event's client_id field, which is a JSON
+                // number; object keys (and thus has()'s argument, for an object) are
+                // always strings, so without this coercion has() errors instead of
+                // returning false for a numeric argument.
+                format!("{clients_json} | has($client_id | tostring)")
             }
         }
     }
