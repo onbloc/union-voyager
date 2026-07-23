@@ -983,7 +983,9 @@ impl Module {
                             .expect("channel is open"),
                         connection: ConnectionMetadata {
                             client_id: source_connection.counterparty_client_id,
-                            connection_id: source_connection.counterparty_connection_id.unwrap(),
+                            connection_id: source_connection
+                                .counterparty_connection_id
+                                .expect("must be set"),
                         },
                     },
                 }
@@ -1065,7 +1067,7 @@ impl Module {
                                 client_id: source_connection.counterparty_client_id,
                                 connection_id: source_connection
                                     .counterparty_connection_id
-                                    .unwrap(),
+                                    .expect("must be set"),
                             },
                         },
                         timeout_timestamp: packet.timeout_timestamp,
