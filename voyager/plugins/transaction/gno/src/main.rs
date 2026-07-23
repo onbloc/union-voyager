@@ -35,7 +35,7 @@ use voyager_sdk::{
     plugin::Plugin,
     primitives::ChainId,
     rpc::{PluginServer, RpcError, RpcResult, types::PluginInfo},
-    vm::{Op, Visit, noop, pass::PassResult},
+    vm::{Op, Visit, call, noop, pass::PassResult, seq},
 };
 
 use crate::call::{IbcMessage, ModuleCall};
@@ -362,7 +362,7 @@ impl PluginServer<ModuleCall, Never> for Module {
     #[instrument(skip_all, fields(chain_id = %self.chain_id))]
     async fn call(&self, _: &Extensions, msg: ModuleCall) -> RpcResult<Op<VoyagerMessage>> {
         match msg {
-            ModuleCall::SubmitTransaction(msgs) => {
+            ModuleCall::SubmitTransaction(mut msgs) => {
                 let batch_submission_result = self.do_send_transaction(msgs.clone()).await;
 
                 match batch_submission_result {
@@ -386,45 +386,52 @@ impl PluginServer<ModuleCall, Never> for Module {
                         BroadcastTxCommitError::TxFailed { error, log } => {
                             info!(%log, "error submitting gno tx: {}", ErrorReporter(error));
 
-                            let _span = info_span!("gno msg failed").entered();
+                            let _span: tracing::span::EnteredSpan =
+                                info_span!("gno msg failed").entered();
                             info!(%log, "tx log");
 
-                            warn!("error submitting transaction: {log}");
+                            if let Some(kind) = gno_permanent_tx_failure(&log) {
+                                let reason = match kind {
+                                    GnoTxFailureKind::AlreadyProcessed(reason) => reason,
+                                    GnoTxFailureKind::MalformedMessage(reason) => {
+                                        error!(
+                                            %reason,
+                                            "gno msg failed due to a malformed message or misconfiguration"
+                                        );
+                                        reason
+                                    }
+                                };
 
-                            // TODO: Add back more sophisticated checks
-                            Err(RpcError::retryable_from_message(format!(
-                                "error submitting tx, tx failed: {log}"
-                            )))
+                                if msgs.len() == 1 {
+                                    warn!(
+                                        msg = %into_value(msgs.pop().unwrap()),
+                                        %reason,
+                                        "gno msg failed permanently, dropping"
+                                    );
 
-                            // if msgs.len() == 1 {
-                            //     warn!(msg = %into_value(msgs.pop().unwrap()), "gno msg failed");
+                                    Ok(noop())
+                                } else {
+                                    // atomic tx: split and retry individually to isolate the offender
+                                    warn!(
+                                        %reason,
+                                        batch.size = %msgs.len(),
+                                        "splitting batch to isolate permanently failing message"
+                                    );
 
-                            //     Ok(noop())
-                            // } else {
-                            //     let failed_msg = msgs.remove(msg_idx);
+                                    Ok(seq(msgs.into_iter().map(|msg| {
+                                        call(PluginMessage::new(
+                                            self.plugin_name(),
+                                            ModuleCall::SubmitTransaction(vec![msg]),
+                                        ))
+                                    })))
+                                }
+                            } else {
+                                warn!("error submitting transaction: {log}");
 
-                            //     if matches!(
-                            //         failed_msg,
-                            //         IbcMessage::IbcUnion(Datagram::UpdateClient(_))
-                            //     ) {
-                            //         warn!(
-                            //             "update client failed, this may cause other messages to fail as well"
-                            //         );
-                            //     }
-
-                            //     warn!(msg = %into_value(failed_msg), "dropping failed msg");
-
-                            //     if msgs.is_empty() {
-                            //         info!("no messages to submit after dropping failed messages");
-
-                            //         Ok(noop())
-                            //     } else {
-                            //         Ok(call(PluginMessage::new(
-                            //             self.plugin_name(),
-                            //             ModuleCall::SubmitTransaction(msgs),
-                            //         )))
-                            //     }
-                            // }
+                                Err(RpcError::retryable_from_message(format!(
+                                    "error submitting tx, tx failed: {log}"
+                                )))
+                            }
                         }
                         err => Err(RpcError::retryable("error submitting tx")(err)),
                     },
@@ -458,6 +465,62 @@ impl PluginServer<ModuleCall, Never> for Module {
                 }
             })
     }
+}
+
+// panic substrings from gno-ibc's errors.gno meaning the packet/ack/batch was already finalized elsewhere
+const GNO_ALREADY_PROCESSED_FAILURES: &[&str] = &[
+    "packet already acknowledged",
+    "acknowledgement already written",
+    "packet commitment not found",
+    "packet already received",
+    "packet timeout expired",
+    "packet commitment already exists",
+    "batch packets not found",
+    "batch receipts not found",
+    "port already registered",
+];
+
+// malformed/unauthorized msgs, or references to ids that don't exist on gno (ids are never torn down, so always a relayer bug)
+const GNO_MALFORMED_MSG_FAILURES: &[&str] = &[
+    "caller not authorized to write ack",
+    "caller not authorized to send packet",
+    "rlm does not match the current crossing frame",
+    "rlm is not proxy realm",
+    "not enough packets",
+    "batch must use the same channel",
+    "invalid counterparty connection id",
+    "invalid counterparty channel id",
+    "timeout must be set",
+    "acknowledgement mismatch",
+    "acknowledgement count mismatch",
+    "acknowledgement cannot be empty",
+    "client not found",
+    "connection not found",
+    "channel not found",
+    "port not found",
+];
+
+#[derive(Debug, Clone, Copy)]
+enum GnoTxFailureKind {
+    AlreadyProcessed(&'static str),
+    MalformedMessage(&'static str),
+}
+
+// unmatched (e.g. invalid connection/channel state, client not active, packet receipt not found) stays retryable pending gno maintainer confirmation
+fn gno_permanent_tx_failure(log: &str) -> Option<GnoTxFailureKind> {
+    if let Some(reason) = GNO_ALREADY_PROCESSED_FAILURES
+        .iter()
+        .copied()
+        .find(|needle| log.contains(needle))
+    {
+        return Some(GnoTxFailureKind::AlreadyProcessed(reason));
+    }
+
+    GNO_MALFORMED_MSG_FAILURES
+        .iter()
+        .copied()
+        .find(|needle| log.contains(needle))
+        .map(GnoTxFailureKind::MalformedMessage)
 }
 
 fn process_msgs(
