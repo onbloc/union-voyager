@@ -2,21 +2,26 @@ use std::collections::VecDeque;
 
 use ibc_union_spec::{
     ClientId, IbcUnion,
-    datagram::{Datagram, MsgPacketTimeout},
-    event::FullEvent,
-    path::{BatchPacketsPath, BatchReceiptsPath, COMMITMENT_MAGIC_ACK, ClientStatePath},
+    datagram::{Datagram, MsgCommitNonMembershipProof, MsgPacketTimeout},
+    event::{FullEvent, PacketSend},
+    path::{
+        BatchPacketsPath, BatchReceiptsPath, COMMITMENT_MAGIC_ACK, ClientStatePath,
+        ConsensusStatePath, NonMembershipProofPath,
+    },
 };
 use jsonrpsee::{Extensions, core::async_trait};
-use proof_lens_light_client_types::ClientState as ProofLensClientState;
+use proof_lens_light_client_types::{
+    ClientState as ProofLensClientState, ConsensusState as ProofLensConsensusState,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tracing::{debug, info, instrument};
-use unionlabs::{self, never::Never, primitives::Bytes};
+use unionlabs::{self, ibc::core::client::height::Height, never::Never};
 use voyager_sdk::{
     DefaultCmd, ExtensionsExt, VoyagerClient, anyhow,
     message::{
         PluginMessage, VoyagerMessage,
-        call::{FetchUpdateHeaders, SubmitTx},
+        call::{FetchUpdateHeaders, SubmitTx, WaitForHeightRelative},
         callback::AggregateSubmitTxFromOrderedHeaders,
         data::{Data, IbcDatagram},
     },
@@ -28,8 +33,8 @@ use voyager_sdk::{
 };
 
 use crate::call::{
-    MakeMsgTimeout, MakeMsgTimeoutFromTrustedHeight, ModuleCall, UpdateClientToHeightTimestamp,
-    WaitForTimeoutOrReceipt,
+    CommitProofLensNonMembershipProof, MakeMsgTimeout, MakeMsgTimeoutFromTrustedHeight, ModuleCall,
+    UpdateClientToHeightTimestamp, WaitForTimeoutOrReceipt,
 };
 
 pub mod call;
@@ -43,6 +48,15 @@ pub struct Module {}
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Config {}
+
+/// Info needed to verify/commit proofs by proxy through a proof lens client's L1, resolved from
+/// the lens client's `ClientState`. See `proof_lens_light_client_types::ClientState` for the
+/// A->B->C (self->L1->L2) terminology.
+struct ProofLensResolution {
+    l1_chain_id: ChainId,
+    l1_client_id: ClientId,
+    l2_client_id: ClientId,
+}
 
 impl Plugin for Module {
     type Call = ModuleCall;
@@ -334,7 +348,7 @@ impl PluginServer<ModuleCall, Never> for Module {
 
                     let proof_unreceived = voyager_client
                         .query_ibc_proof(
-                            counterparty_chain_id,
+                            counterparty_chain_id.clone(),
                             QueryHeight::Specific(client_meta.counterparty_height),
                             BatchReceiptsPath::from_packets(&[event.packet().clone()]),
                         )
@@ -343,25 +357,60 @@ impl PluginServer<ModuleCall, Never> for Module {
 
                     match proof_unreceived.proof_type {
                         ProofType::NonMembership => {
-                            let encoded_proof_commitment = self
-                                .encode_proof_for_client(
+                            match self
+                                .resolve_proof_lens(
                                     voyager_client,
                                     &chain_id,
                                     event.packet.source_channel.connection.client_id,
-                                    proof_unreceived.proof,
                                 )
-                                .await?;
+                                .await?
+                            {
+                                // proof lens clients can't verify a raw counterparty proof
+                                // directly - the fact that the packet hasn't been received must
+                                // instead be committed onto the L1 first (see
+                                // `commit_proof_lens_non_membership_proof`), which the lens client
+                                // then verifies a proof of by proxy.
+                                Some(lens) => {
+                                    self.make_msg_timeout_via_proof_lens(
+                                        voyager_client,
+                                        event,
+                                        chain_id,
+                                        counterparty_chain_id,
+                                        client_meta.counterparty_height,
+                                        lens,
+                                    )
+                                    .await
+                                }
+                                None => {
+                                    let client_info = voyager_client
+                                        .client_info::<IbcUnion>(
+                                            chain_id.clone(),
+                                            event.packet.source_channel.connection.client_id,
+                                        )
+                                        .await?;
 
-                            Ok(call(SubmitTx {
-                                chain_id,
-                                datagrams: vec![IbcDatagram::new::<IbcUnion>(Datagram::from(
-                                    MsgPacketTimeout {
-                                        packet: event.packet(),
-                                        proof: encoded_proof_commitment,
-                                        proof_height: client_meta.counterparty_height.height(),
-                                    },
-                                ))],
-                            }))
+                                    let encoded_proof_commitment = voyager_client
+                                        .encode_proof::<IbcUnion>(
+                                            client_info.client_type,
+                                            client_info.ibc_interface,
+                                            proof_unreceived.proof,
+                                        )
+                                        .await?;
+
+                                    Ok(call(SubmitTx {
+                                        chain_id,
+                                        datagrams: vec![IbcDatagram::new::<IbcUnion>(
+                                            Datagram::from(MsgPacketTimeout {
+                                                packet: event.packet(),
+                                                proof: encoded_proof_commitment,
+                                                proof_height: client_meta
+                                                    .counterparty_height
+                                                    .height(),
+                                            }),
+                                        )],
+                                    }))
+                                }
+                            }
                         }
                         ProofType::Membership => {
                             info!(
@@ -400,6 +449,19 @@ impl PluginServer<ModuleCall, Never> for Module {
                         )),
                     ]))
                 }
+            }
+            ModuleCall::CommitProofLensNonMembershipProof(CommitProofLensNonMembershipProof {
+                event,
+                chain_id,
+                counterparty_chain_id,
+            }) => {
+                self.commit_proof_lens_non_membership_proof(
+                    voyager_client,
+                    event,
+                    chain_id,
+                    counterparty_chain_id,
+                )
+                .await
             }
         }
     }
@@ -488,66 +550,236 @@ impl Module {
         }
     }
 
-    /// Encode a raw storage proof for consumption by `client_id` on `chain_id`.
-    ///
-    /// Proof lens clients don't have their own proof format (`client/proof-lens`'s
-    /// `encode_proof`/`decode_proof` always error) - proofs for these clients must instead be
-    /// encoded for the underlying L2 client (i.e. the client tracking the actual counterparty,
-    /// running on the proof lens client's L1), per the client's `l1_client_id`/`l2_client_id`.
-    /// See `proof_lens_light_client_types::ClientState` for the A->B->C terminology.
-    async fn encode_proof_for_client(
+    /// Determine whether `client_id` on `chain_id` is a proof lens client, resolving its L1/L2
+    /// client ids if so.
+    async fn resolve_proof_lens(
         &self,
         voyager_client: &VoyagerClient,
         chain_id: &ChainId,
         client_id: ClientId,
-        proof: serde_json::Value,
-    ) -> RpcResult<Bytes> {
+    ) -> RpcResult<Option<ProofLensResolution>> {
         let client_info = voyager_client
             .client_info::<IbcUnion>(chain_id.clone(), client_id)
             .await?;
 
-        if client_info.client_type.as_str() == ClientType::PROOF_LENS {
-            let proof_lens_client_state = voyager_client
-                .decode_client_state::<IbcUnion, ProofLensClientState>(
-                    client_info.client_type.clone(),
-                    client_info.ibc_interface.clone(),
-                    voyager_client
-                        .query_ibc_state(
-                            chain_id.clone(),
-                            QueryHeight::Latest,
-                            ClientStatePath { client_id },
-                        )
-                        .await?,
-                )
-                .await?;
-
-            let l1_counterparty_chain_id = voyager_client
-                .client_state_meta::<IbcUnion>(
-                    chain_id.clone(),
-                    QueryHeight::Latest,
-                    proof_lens_client_state.l1_client_id,
-                )
-                .await?
-                .counterparty_chain_id;
-
-            let l2_client_info = voyager_client
-                .client_info::<IbcUnion>(
-                    l1_counterparty_chain_id,
-                    proof_lens_client_state.l2_client_id,
-                )
-                .await?;
-
-            voyager_client
-                .encode_proof::<IbcUnion>(
-                    l2_client_info.client_type,
-                    l2_client_info.ibc_interface,
-                    proof,
-                )
-                .await
-        } else {
-            voyager_client
-                .encode_proof::<IbcUnion>(client_info.client_type, client_info.ibc_interface, proof)
-                .await
+        if client_info.client_type.as_str() != ClientType::PROOF_LENS {
+            return Ok(None);
         }
+
+        let proof_lens_client_state = voyager_client
+            .decode_client_state::<IbcUnion, ProofLensClientState>(
+                client_info.client_type.clone(),
+                client_info.ibc_interface.clone(),
+                voyager_client
+                    .query_ibc_state(
+                        chain_id.clone(),
+                        QueryHeight::Latest,
+                        ClientStatePath { client_id },
+                    )
+                    .await?,
+            )
+            .await?;
+
+        let l1_chain_id = voyager_client
+            .client_state_meta::<IbcUnion>(
+                chain_id.clone(),
+                QueryHeight::Latest,
+                proof_lens_client_state.l1_client_id,
+            )
+            .await?
+            .counterparty_chain_id;
+
+        Ok(Some(ProofLensResolution {
+            l1_chain_id,
+            l1_client_id: proof_lens_client_state.l1_client_id,
+            l2_client_id: proof_lens_client_state.l2_client_id,
+        }))
+    }
+
+    /// Build the timeout message for a packet whose source client is a proof lens client.
+    ///
+    /// Proof lens clients don't have their own proof format (`client/proof-lens`'s
+    /// `encode_proof`/`decode_proof` always error) - instead, the non-membership of the packet
+    /// must first be committed onto the client's L1 (see
+    /// `commit_proof_lens_non_membership_proof`), which the lens client then verifies a proof of
+    /// by proxy.
+    async fn make_msg_timeout_via_proof_lens(
+        &self,
+        voyager_client: &VoyagerClient,
+        event: PacketSend,
+        chain_id: ChainId,
+        counterparty_chain_id: ChainId,
+        counterparty_height: Height,
+        lens: ProofLensResolution,
+    ) -> RpcResult<Op<VoyagerMessage>> {
+        let client_id = event.packet.source_channel.connection.client_id;
+
+        // `verifyNonMembership` on the lens client reads the L1 height to check out of the lens
+        // client's own consensus state at `counterparty_height` (not `counterparty_height`
+        // itself, which is the L2/counterparty height) - so the proof we submit must be queried
+        // against that same L1 height, not the L2 height.
+        let lens_client_info = voyager_client
+            .client_info::<IbcUnion>(chain_id.clone(), client_id)
+            .await?;
+
+        let proof_lens_consensus_state = voyager_client
+            .decode_consensus_state::<IbcUnion, ProofLensConsensusState>(
+                lens_client_info.client_type,
+                lens_client_info.ibc_interface,
+                voyager_client
+                    .query_ibc_state(
+                        chain_id.clone(),
+                        QueryHeight::Latest,
+                        ConsensusStatePath {
+                            client_id,
+                            height: counterparty_height.height(),
+                        },
+                    )
+                    .await?,
+            )
+            .await?;
+
+        let l1_proof_height = Height::new(proof_lens_consensus_state.l1_height);
+
+        let receipt_path_key = BatchReceiptsPath::from_packets(&[event.packet()]).key();
+
+        let commitment_proof = voyager_client
+            .query_ibc_proof(
+                lens.l1_chain_id.clone(),
+                QueryHeight::Specific(l1_proof_height),
+                NonMembershipProofPath {
+                    client_id: lens.l2_client_id,
+                    proof_height: counterparty_height.height(),
+                    path: receipt_path_key.into(),
+                },
+            )
+            .await?
+            .into_result()?;
+
+        match commitment_proof.proof_type {
+            ProofType::Membership => {
+                let l1_client_info = voyager_client
+                    .client_info::<IbcUnion>(chain_id.clone(), lens.l1_client_id)
+                    .await?;
+
+                let encoded_proof_commitment = voyager_client
+                    .encode_proof::<IbcUnion>(
+                        l1_client_info.client_type,
+                        l1_client_info.ibc_interface,
+                        commitment_proof.proof,
+                    )
+                    .await?;
+
+                Ok(call(SubmitTx {
+                    chain_id,
+                    datagrams: vec![IbcDatagram::new::<IbcUnion>(Datagram::from(
+                        MsgPacketTimeout {
+                            packet: event.packet(),
+                            proof: encoded_proof_commitment,
+                            proof_height: counterparty_height.height(),
+                        },
+                    ))],
+                }))
+            }
+            ProofType::NonMembership => {
+                info!("proof lens non-membership commitment not yet posted on L1, committing");
+
+                Ok(call(PluginMessage::new(
+                    self.plugin_name(),
+                    ModuleCall::from(CommitProofLensNonMembershipProof {
+                        event,
+                        chain_id,
+                        counterparty_chain_id,
+                    }),
+                )))
+            }
+        }
+    }
+
+    /// Commit a non-membership proof (proving that `event.packet` has not been received on
+    /// `counterparty_chain_id`) onto the L1 anchoring `event.packet`'s source client, then retry
+    /// building the timeout message once the source client has caught up.
+    async fn commit_proof_lens_non_membership_proof(
+        &self,
+        voyager_client: &VoyagerClient,
+        event: PacketSend,
+        chain_id: ChainId,
+        counterparty_chain_id: ChainId,
+    ) -> RpcResult<Op<VoyagerMessage>> {
+        let client_id = event.packet.source_channel.connection.client_id;
+
+        let client_meta = voyager_client
+            .client_state_meta::<IbcUnion>(chain_id.clone(), QueryHeight::Latest, client_id)
+            .await?;
+
+        let raw_proof = voyager_client
+            .query_ibc_proof(
+                counterparty_chain_id.clone(),
+                QueryHeight::Specific(client_meta.counterparty_height),
+                BatchReceiptsPath::from_packets(&[event.packet()]),
+            )
+            .await?
+            .into_result()?;
+
+        if raw_proof.proof_type != ProofType::NonMembership {
+            info!("packet was received in the meantime, no longer need to commit a timeout proof");
+
+            return Ok(noop());
+        }
+
+        let lens = self
+            .resolve_proof_lens(voyager_client, &chain_id, client_id)
+            .await?
+            .ok_or_else(|| RpcError::fatal_from_message("client is not a proof lens client"))?;
+
+        let l2_client_info = voyager_client
+            .client_info::<IbcUnion>(lens.l1_chain_id.clone(), lens.l2_client_id)
+            .await?;
+
+        let encoded_l2_proof = voyager_client
+            .encode_proof::<IbcUnion>(
+                l2_client_info.client_type,
+                l2_client_info.ibc_interface,
+                raw_proof.proof,
+            )
+            .await?;
+
+        let commit_msg = MsgCommitNonMembershipProof {
+            client_id: lens.l2_client_id,
+            proof_height: client_meta.counterparty_height.height(),
+            proof: encoded_l2_proof,
+            path: BatchReceiptsPath::from_packets(&[event.packet()])
+                .key()
+                .into(),
+        };
+
+        Ok(seq([
+            call(SubmitTx {
+                chain_id: lens.l1_chain_id.clone(),
+                datagrams: vec![IbcDatagram::new::<IbcUnion>(Datagram::from(commit_msg))],
+            }),
+            call(WaitForHeightRelative {
+                chain_id: lens.l1_chain_id,
+                height_diff: 1,
+                finalized: false,
+            }),
+            call(PluginMessage::new(
+                self.plugin_name(),
+                ModuleCall::from(UpdateClientToHeightTimestamp {
+                    chain_id: chain_id.clone(),
+                    counterparty_chain_id: counterparty_chain_id.clone(),
+                    client_id,
+                    timestamp: event.packet.timeout_timestamp,
+                }),
+            )),
+            call(PluginMessage::new(
+                self.plugin_name(),
+                ModuleCall::from(MakeMsgTimeoutFromTrustedHeight {
+                    event,
+                    chain_id,
+                    counterparty_chain_id,
+                }),
+            )),
+        ]))
     }
 }
