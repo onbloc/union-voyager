@@ -19,7 +19,7 @@ use ibc_union_spec::{
 use jsonrpsee::{Extensions, core::async_trait};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use tracing::{debug, error, info, instrument, trace, warn};
+use tracing::{debug, info, instrument, trace, warn};
 use unionlabs::{ibc::core::client::height::Height, never::Never, primitives::H256};
 use voyager_sdk::{
     ExtensionsExt, VoyagerClient,
@@ -379,7 +379,7 @@ impl Module {
                 } = &event
                 {
                     debug!(%packet_hash, %batch_hash, %channel_id, "found batch send event");
-                    if !seen_batches.insert((channel_id.clone(), batch_hash.clone())) {
+                    if !seen_batches.insert((*channel_id, *batch_hash)) {
                         return None;
                     }
                 }
@@ -983,7 +983,9 @@ impl Module {
                             .expect("channel is open"),
                         connection: ConnectionMetadata {
                             client_id: source_connection.counterparty_client_id,
-                            connection_id: source_connection.counterparty_connection_id.unwrap(),
+                            connection_id: source_connection
+                                .counterparty_connection_id
+                                .expect("must be set"),
                         },
                     },
                 }
@@ -1065,7 +1067,7 @@ impl Module {
                                 client_id: source_connection.counterparty_client_id,
                                 connection_id: source_connection
                                     .counterparty_connection_id
-                                    .unwrap(),
+                                    .expect("must be set"),
                             },
                         },
                         timeout_timestamp: packet.timeout_timestamp,
@@ -1264,10 +1266,6 @@ impl Module {
                     provable_height,
                     event,
                 )))
-            }
-            _ => {
-                error!("unimplemented: {event:?}");
-                Ok(noop())
             }
         }
     }
