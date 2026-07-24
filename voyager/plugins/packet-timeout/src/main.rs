@@ -454,12 +454,14 @@ impl PluginServer<ModuleCall, Never> for Module {
                 event,
                 chain_id,
                 counterparty_chain_id,
+                counterparty_height,
             }) => {
                 self.commit_proof_lens_non_membership_proof(
                     voyager_client,
                     event,
                     chain_id,
                     counterparty_chain_id,
+                    counterparty_height,
                 )
                 .await
             }
@@ -690,6 +692,7 @@ impl Module {
                         event,
                         chain_id,
                         counterparty_chain_id,
+                        counterparty_height,
                     }),
                 )))
             }
@@ -697,25 +700,24 @@ impl Module {
     }
 
     /// Commit a non-membership proof (proving that `event.packet` has not been received on
-    /// `counterparty_chain_id`) onto the L1 anchoring `event.packet`'s source client, then retry
-    /// building the timeout message once the source client has caught up.
+    /// `counterparty_chain_id` as of `counterparty_height`) onto the L1 anchoring
+    /// `event.packet`'s source client, then refresh the source client's consensus state *at
+    /// `counterparty_height`* (not a newer height - the commitment is keyed by this exact
+    /// height) before retrying the timeout message.
     async fn commit_proof_lens_non_membership_proof(
         &self,
         voyager_client: &VoyagerClient,
         event: PacketSend,
         chain_id: ChainId,
         counterparty_chain_id: ChainId,
+        counterparty_height: Height,
     ) -> RpcResult<Op<VoyagerMessage>> {
         let client_id = event.packet.source_channel.connection.client_id;
-
-        let client_meta = voyager_client
-            .client_state_meta::<IbcUnion>(chain_id.clone(), QueryHeight::Latest, client_id)
-            .await?;
 
         let raw_proof = voyager_client
             .query_ibc_proof(
                 counterparty_chain_id.clone(),
-                QueryHeight::Specific(client_meta.counterparty_height),
+                QueryHeight::Specific(counterparty_height),
                 BatchReceiptsPath::from_packets(&[event.packet()]),
             )
             .await?
@@ -746,12 +748,16 @@ impl Module {
 
         let commit_msg = MsgCommitNonMembershipProof {
             client_id: lens.l2_client_id,
-            proof_height: client_meta.counterparty_height.height(),
+            proof_height: counterparty_height.height(),
             proof: encoded_l2_proof,
             path: BatchReceiptsPath::from_packets(&[event.packet()])
                 .key()
                 .into(),
         };
+
+        let lens_client_info = voyager_client
+            .client_info::<IbcUnion>(chain_id.clone(), client_id)
+            .await?;
 
         Ok(seq([
             call(SubmitTx {
@@ -763,15 +769,29 @@ impl Module {
                 height_diff: 1,
                 finalized: false,
             }),
-            call(PluginMessage::new(
-                self.plugin_name(),
-                ModuleCall::from(UpdateClientToHeightTimestamp {
+            // refresh the lens client's consensus state *at counterparty_height* (not a newer
+            // height, e.g. via `UpdateClientToHeightTimestamp`) - `FetchUpdateAfterL1Update`
+            // always builds a header off the L1's current latest height regardless of whether a
+            // consensus state already exists for this L2 height, and `updateClient` overwrites
+            // the L1 height for a given L2 height, so this refreshes it to (the now-post-commit)
+            // latest without changing the L2 height the client trusts, which the just-submitted
+            // commitment's key is bound to.
+            promise(
+                [call(FetchUpdateHeaders {
+                    client_type: lens_client_info.client_type,
+                    chain_id: counterparty_chain_id.clone(),
+                    counterparty_chain_id: chain_id.clone(),
+                    client_id: RawClientId::new(client_id),
+                    update_from: counterparty_height,
+                    update_to: counterparty_height,
+                })],
+                [],
+                AggregateSubmitTxFromOrderedHeaders {
+                    ibc_spec_id: IbcUnion::ID,
                     chain_id: chain_id.clone(),
-                    counterparty_chain_id: counterparty_chain_id.clone(),
-                    client_id,
-                    timestamp: event.packet.timeout_timestamp,
-                }),
-            )),
+                    client_id: RawClientId::new(client_id),
+                },
+            ),
             call(PluginMessage::new(
                 self.plugin_name(),
                 ModuleCall::from(MakeMsgTimeoutFromTrustedHeight {
