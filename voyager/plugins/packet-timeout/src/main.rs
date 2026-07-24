@@ -1,16 +1,17 @@
 use std::collections::VecDeque;
 
 use ibc_union_spec::{
-    IbcUnion,
+    ClientId, IbcUnion,
     datagram::{Datagram, MsgPacketTimeout},
     event::FullEvent,
-    path::{BatchPacketsPath, BatchReceiptsPath, COMMITMENT_MAGIC_ACK},
+    path::{BatchPacketsPath, BatchReceiptsPath, COMMITMENT_MAGIC_ACK, ClientStatePath},
 };
 use jsonrpsee::{Extensions, core::async_trait};
+use proof_lens_light_client_types::ClientState as ProofLensClientState;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tracing::{debug, info, instrument};
-use unionlabs::{self, never::Never};
+use unionlabs::{self, never::Never, primitives::Bytes};
 use voyager_sdk::{
     DefaultCmd, ExtensionsExt, VoyagerClient, anyhow,
     message::{
@@ -20,7 +21,7 @@ use voyager_sdk::{
         data::{Data, IbcDatagram},
     },
     plugin::Plugin,
-    primitives::{IbcSpec, QueryHeight},
+    primitives::{ChainId, ClientType, IbcSpec, QueryHeight},
     rpc::{PluginServer, RpcError, RpcErrorExt, RpcResult, types::PluginInfo},
     types::{ProofType, RawClientId},
     vm::{Op, call, defer, defer_relative, noop, pass::PassResult, promise, seq},
@@ -342,17 +343,11 @@ impl PluginServer<ModuleCall, Never> for Module {
 
                     match proof_unreceived.proof_type {
                         ProofType::NonMembership => {
-                            let client_info = voyager_client
-                                .client_info::<IbcUnion>(
-                                    chain_id.clone(),
+                            let encoded_proof_commitment = self
+                                .encode_proof_for_client(
+                                    voyager_client,
+                                    &chain_id,
                                     event.packet.source_channel.connection.client_id,
-                                )
-                                .await?;
-
-                            let encoded_proof_commitment = voyager_client
-                                .encode_proof::<IbcUnion>(
-                                    client_info.client_type,
-                                    client_info.ibc_interface,
                                     proof_unreceived.proof,
                                 )
                                 .await?;
@@ -490,6 +485,69 @@ impl Module {
                     ]))
                 }
             }
+        }
+    }
+
+    /// Encode a raw storage proof for consumption by `client_id` on `chain_id`.
+    ///
+    /// Proof lens clients don't have their own proof format (`client/proof-lens`'s
+    /// `encode_proof`/`decode_proof` always error) - proofs for these clients must instead be
+    /// encoded for the underlying L2 client (i.e. the client tracking the actual counterparty,
+    /// running on the proof lens client's L1), per the client's `l1_client_id`/`l2_client_id`.
+    /// See `proof_lens_light_client_types::ClientState` for the A->B->C terminology.
+    async fn encode_proof_for_client(
+        &self,
+        voyager_client: &VoyagerClient,
+        chain_id: &ChainId,
+        client_id: ClientId,
+        proof: serde_json::Value,
+    ) -> RpcResult<Bytes> {
+        let client_info = voyager_client
+            .client_info::<IbcUnion>(chain_id.clone(), client_id)
+            .await?;
+
+        if client_info.client_type.as_str() == ClientType::PROOF_LENS {
+            let proof_lens_client_state = voyager_client
+                .decode_client_state::<IbcUnion, ProofLensClientState>(
+                    client_info.client_type.clone(),
+                    client_info.ibc_interface.clone(),
+                    voyager_client
+                        .query_ibc_state(
+                            chain_id.clone(),
+                            QueryHeight::Latest,
+                            ClientStatePath { client_id },
+                        )
+                        .await?,
+                )
+                .await?;
+
+            let l1_counterparty_chain_id = voyager_client
+                .client_state_meta::<IbcUnion>(
+                    chain_id.clone(),
+                    QueryHeight::Latest,
+                    proof_lens_client_state.l1_client_id,
+                )
+                .await?
+                .counterparty_chain_id;
+
+            let l2_client_info = voyager_client
+                .client_info::<IbcUnion>(
+                    l1_counterparty_chain_id,
+                    proof_lens_client_state.l2_client_id,
+                )
+                .await?;
+
+            voyager_client
+                .encode_proof::<IbcUnion>(
+                    l2_client_info.client_type,
+                    l2_client_info.ibc_interface,
+                    proof,
+                )
+                .await
+        } else {
+            voyager_client
+                .encode_proof::<IbcUnion>(client_info.client_type, client_info.ibc_interface, proof)
+                .await
         }
     }
 }
