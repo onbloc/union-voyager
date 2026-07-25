@@ -17,6 +17,7 @@ enumorph       = { workspace = true }
 ibc-union-spec = { workspace = true, features = ["serde", "ethabi"] }
 jsonrpsee      = { workspace = true, features = ["macros", "server", "tracing"] }
 macros         = { workspace = true }
+proof-lens-light-client-types = { workspace = true, features = ["serde"] }
 serde          = { workspace = true, features = ["derive"] }
 serde_json     = { workspace = true }
 tokio          = { workspace = true }
