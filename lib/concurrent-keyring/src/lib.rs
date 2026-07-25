@@ -91,6 +91,30 @@ impl<A: Hash + Eq + Clone + Display, S: 'static> ConcurrentKeyring<A, S> {
             return None;
         };
 
+        // Returns `address` to the buffer on drop, whether that happens because `with`
+        // returns normally or because the `with(..)` future itself is cancelled (e.g. an
+        // upstream timeout, or the enclosing task being aborted) while awaiting `f`. Without
+        // this, a cancellation would leak `address` out of the ring buffer permanently, since
+        // the code that used to return it ran only after the `.await` point.
+        struct ReturnOnDrop<'a, A: Hash + Eq + Clone> {
+            buffer: &'a ArrayQueue<A>,
+            address: A,
+        }
+
+        impl<A: Hash + Eq + Clone> Drop for ReturnOnDrop<'_, A> {
+            fn drop(&mut self) {
+                self.buffer
+                    .push(self.address.clone())
+                    .ok()
+                    .expect("no additional items are added; qed;");
+            }
+        }
+
+        let guard = ReturnOnDrop {
+            buffer: &self.addresses_buffer,
+            address: address.clone(),
+        };
+
         let secret = self.signers.get(&address).expect("key is present; qed;");
 
         let r = f(secret)
@@ -102,10 +126,7 @@ impl<A: Hash + Eq + Clone + Display, S: 'static> ConcurrentKeyring<A, S> {
             ))
             .await;
 
-        self.addresses_buffer
-            .push(address)
-            .ok()
-            .expect("no additional items are added; qed;");
+        drop(guard);
 
         match r {
             Ok(res) => Some(res),
