@@ -3,6 +3,7 @@ use std::{
     ops::Deref,
     panic::AssertUnwindSafe,
     sync::Arc,
+    time::Duration,
 };
 
 use alloy::{
@@ -50,6 +51,12 @@ use crate::{
 };
 
 pub mod call;
+
+/// How long to wait for a submitted transaction to be included before giving up and returning
+/// the signer to the keyring. Without this, a transaction that never lands (dropped from the
+/// mempool, replaced, stuck behind a low gas price, ...) would hold its signer forever, and any
+/// other queue item waiting on that signer would retry indefinitely with "no signers available".
+const RECEIPT_TIMEOUT: Duration = Duration::from_secs(60);
 
 #[tokio::main]
 async fn main() {
@@ -287,6 +294,8 @@ pub enum TxSubmitError {
     RpcError(#[from] ErrorObjectOwned),
     #[error("batch too large")]
     BatchTooLarge,
+    #[error("timed out waiting for tx {tx_hash} to be included")]
+    ReceiptTimeout { tx_hash: H256 },
 }
 
 #[async_trait]
@@ -504,79 +513,90 @@ impl Module {
         match call.gas(gas_to_use).send().await {
             Ok(ok) => {
                 let tx_hash = <H256>::from(*ok.tx_hash());
-                async move {
-                    let receipt = ok.get_receipt().await?;
+                let result = tokio::time::timeout(
+                    RECEIPT_TIMEOUT,
+                    async move {
+                        let receipt = ok.get_receipt().await?;
 
-                    let block_number = receipt.block_number;
+                        let block_number = receipt.block_number;
 
-                    info!(%tx_hash, block_number, "tx included");
+                        info!(%tx_hash, block_number, "tx included");
 
-                    let result = MulticallResult::decode_log_data(
-                        receipt
-                            .inner
-                            .inner
-                            .logs()
-                            .last()
-                            .expect("multicall event should be last log")
-                            .data(),
-                    )
-                    .expect("unable to decode multicall result log");
+                        let result = MulticallResult::decode_log_data(
+                            receipt
+                                .inner
+                                .inner
+                                .logs()
+                                .last()
+                                .expect("multicall event should be last log")
+                                .data(),
+                        )
+                        .expect("unable to decode multicall result log");
 
-                    info!(
-                        gas_used = %receipt.gas_used,
-                        batch.size = msg_names.len(),
-                        "submitted batched evm messages"
-                    );
+                        info!(
+                            gas_used = %receipt.gas_used,
+                            batch.size = msg_names.len(),
+                            "submitted batched evm messages"
+                        );
 
-                    for (idx, (result, (msg, msg_name))) in
-                        result._0.into_iter().zip(msg_names).enumerate()
-                    {
-                        if result.success {
-                            info!(
-                                msg = msg_name,
-                                %idx,
-                                data = %into_value(&msg),
-                                "evm tx",
-                            );
-                        } else if let Ok(known_revert) =
-                            IbcErrors::abi_decode_validate(&result.returnData)
+                        for (idx, (result, (msg, msg_name))) in
+                            result._0.into_iter().zip(msg_names).enumerate()
                         {
-                            error!(
-                                msg = %msg_name,
-                                %idx,
-                                revert = ?known_revert,
-                                well_known = true,
-                                data = %into_value(&msg),
-                                "evm message failed",
-                            );
-                        } else if result.returnData.is_empty() {
-                            error!(
-                                msg = %msg_name,
-                                %idx,
-                                revert = %result.returnData,
-                                well_known = false,
-                                data = %into_value(&msg),
-                                "evm message failed with 0x revert, likely an ABI issue",
-                            );
-                        } else {
-                            error!(
-                                msg = %msg_name,
-                                %idx,
-                                revert = %result.returnData,
-                                well_known = false,
-                                data = %into_value(&msg),
-                                "evm message failed",
-                            );
+                            if result.success {
+                                info!(
+                                    msg = msg_name,
+                                    %idx,
+                                    data = %into_value(&msg),
+                                    "evm tx",
+                                );
+                            } else if let Ok(known_revert) =
+                                IbcErrors::abi_decode_validate(&result.returnData)
+                            {
+                                error!(
+                                    msg = %msg_name,
+                                    %idx,
+                                    revert = ?known_revert,
+                                    well_known = true,
+                                    data = %into_value(&msg),
+                                    "evm message failed",
+                                );
+                            } else if result.returnData.is_empty() {
+                                error!(
+                                    msg = %msg_name,
+                                    %idx,
+                                    revert = %result.returnData,
+                                    well_known = false,
+                                    data = %into_value(&msg),
+                                    "evm message failed with 0x revert, likely an ABI issue",
+                                );
+                            } else {
+                                error!(
+                                    msg = %msg_name,
+                                    %idx,
+                                    revert = %result.returnData,
+                                    well_known = false,
+                                    data = %into_value(&msg),
+                                    "evm message failed",
+                                );
+                            }
                         }
-                    }
 
-                    Ok(())
+                        Ok(())
+                    }
+                    .instrument(info_span!(
+                        "evm tx",
+                        %tx_hash,
+                    )),
+                )
+                .await;
+
+                match result {
+                    Ok(inner) => inner,
+                    Err(_) => {
+                        warn!(%tx_hash, "timed out waiting for tx to be included");
+                        Err(TxSubmitError::ReceiptTimeout { tx_hash })
+                    }
                 }
-                .instrument(info_span!(
-                    "evm tx",
-                    %tx_hash,
-                ))
-                .await
             }
             Err(
                 Error::PendingTransactionError(PendingTransactionError::TransportError(
