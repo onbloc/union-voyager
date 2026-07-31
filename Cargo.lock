@@ -17192,6 +17192,7 @@ dependencies = [
  "ibc-union-spec",
  "jsonrpsee 0.26.0",
  "macros",
+ "proof-lens-light-client-types",
  "serde",
  "serde_json",
  "tokio",
@@ -17284,6 +17285,7 @@ dependencies = [
  "tokio",
  "tracing",
  "unionlabs",
+ "voyager-core",
  "voyager-sdk",
 ]
 
