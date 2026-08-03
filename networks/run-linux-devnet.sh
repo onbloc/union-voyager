@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# DEVNET_PROJECT_NAME=... \
+#   NO_BLOCKSCOUT=true \
+#   ./networks/run-linux-devnet.sh
+
+
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 system="${DEVNET_LINUX_SYSTEM:-aarch64-linux}"
 target="${DEVNET_TARGET:-full-dev-setup}"
