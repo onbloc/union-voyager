@@ -1,5 +1,5 @@
+use gno_rpc::rpc_types::TxFee;
 use serde::{Deserialize, Serialize};
-use unionlabs::cosmos::{base::coin::Coin, tx::fee::Fee};
 
 use super::GasFillerT;
 use crate::gas::u128_saturating_mul_f64;
@@ -21,21 +21,19 @@ impl GasFillerT for GasFiller {
         self.max_gas
     }
 
-    async fn mk_fee(&self, gas: u64) -> Fee {
+    async fn mk_fee(&self, gas: u64) -> Result<TxFee, crate::BroadcastTxCommitError> {
         // gas limit = provided gas * multiplier, clamped between min_gas and max_gas
         let gas_limit = u128_saturating_mul_f64(gas.into(), self.gas_multiplier)
             .clamp(self.min_gas.into(), self.max_gas.into());
 
-        let amount = u128_saturating_mul_f64(gas.into(), self.gas_price);
+        // price the fee off of gas_limit (what's actually declared as gas_wanted),
+        // not the pre-multiplier gas — otherwise a multiplier > 1 understates the
+        // effective price-per-gas relative to the configured gas_price
+        let amount = u128_saturating_mul_f64(gas_limit, self.gas_price);
 
-        Fee {
-            amount: vec![Coin {
-                amount,
-                denom: self.gas_denom.clone(),
-            }],
-            gas_limit: gas_limit.try_into().unwrap_or(u64::MAX),
-            payer: String::new(),
-            granter: String::new(),
-        }
+        Ok(TxFee {
+            gas_wanted: gas_limit.try_into().unwrap_or(i64::MAX),
+            gas_fee: format!("{amount}{}", self.gas_denom),
+        })
     }
 }

@@ -11,11 +11,11 @@ use std::{
 use concurrent_keyring::{ConcurrentKeyring, KeyringConfig, KeyringEntry};
 use gno_client::{
     BroadcastTxCommitError, TxClient,
-    gas::fixed,
+    gas::{GasFillerT, any},
     rpc::{Rpc, RpcT},
     wallet::{LocalSigner, WalletT},
 };
-use gno_rpc::rpc_types::{MemFile, MemPackage, Msg, MsgRun, TxFee};
+use gno_rpc::rpc_types::{MemFile, MemPackage, Msg, MsgRun};
 use ibc_union_spec::{Packet, datagram::Datagram};
 use jsonrpsee::{Extensions, MethodsError, core::async_trait, proc_macros::rpc};
 use serde::{Deserialize, Serialize};
@@ -58,8 +58,7 @@ pub struct ModuleInner {
     pub ibc_core_realm: String,
     pub keyring: ConcurrentKeyring<Bech32<H160>, LocalSigner>,
     pub rpc: Rpc,
-    pub fee: TxFee,
-    // pub gas_config: any::GasFiller,
+    pub gas_config: any::GasFiller,
     pub fee_recipient: Option<Bech32<H160>>,
     pub max_tx_size: u32,
 }
@@ -79,8 +78,7 @@ pub struct Config {
     pub ibc_core_realm: String,
     pub keyring: KeyringConfig,
     pub rpc_url: String,
-    pub fee: TxFee,
-    // pub gas_config: GasFillerConfig,
+    pub gas_config: any::Config,
     #[serde(default)]
     pub fee_recipient: Option<Bech32<H160>>,
     pub max_tx_size: u32,
@@ -106,6 +104,8 @@ impl Plugin for Module {
             );
         }
 
+        let gas_config = config.gas_config.into_gas_filler(rpc.client().clone());
+
         Ok(Self(Arc::new(ModuleInner {
             ibc_core_realm: config.ibc_core_realm,
             keyring: ConcurrentKeyring::new(
@@ -121,7 +121,7 @@ impl Plugin for Module {
                 }),
             ),
             rpc,
-            fee: config.fee,
+            gas_config,
             chain_id: ChainId::new(chain_id),
             fee_recipient: config.fee_recipient,
             max_tx_size: config.max_tx_size,
@@ -225,7 +225,7 @@ impl Module {
                     })
                     .collect::<Vec<_>>();
 
-                let tx_client = TxClient::new(signer, &self.rpc, fixed::GasFiller::default());
+                let tx_client = TxClient::new(signer, &self.rpc, &self.gas_config);
 
                 let batch_size = msgs.len();
                 let msg_names = msgs.iter().map(|x| x.0.name()).collect::<Vec<_>>();
@@ -279,14 +279,18 @@ impl Module {
                     //     }
                     // };
 
-                    match tx_client
-                        .broadcast_tx_commit(
-                            msgs.iter().map(move |x| x.1.clone()).collect::<Vec<_>>(),
-                            memo,
-                            self.fee.clone(),
-                        )
-                        .await
-                    {
+                    let gno_msgs = msgs.iter().map(|x| x.1.clone()).collect::<Vec<_>>();
+
+                    let fee = match &self.gas_config {
+                        any::GasFiller::Fixed(fee) => fee.clone(),
+                        any::GasFiller::Simulate(_) | any::GasFiller::DynamicGasPrice(_) => {
+                            let gas_used = tx_client.simulate_tx(gno_msgs.clone(), &memo).await?;
+
+                            self.gas_config.mk_fee(gas_used).await?
+                        }
+                    };
+
+                    match tx_client.broadcast_tx_commit(gno_msgs, memo, fee).await {
                         Ok(tx_response) => {
                             info!(
                                 height = tx_response.height,
@@ -1007,9 +1011,12 @@ mod tests {
             },
             "rpc_url": "rpc_url",
             "max_tx_size": 1000000,
-            "fee": {
-              "gas_wanted": "100",
-              "gas_fee": "1ugnot"
+            "gas_config": {
+              "type": "fixed",
+              "config": {
+                "gas_wanted": "100",
+                "gas_fee": "1ugnot"
+              }
             }
           }"#;
 
@@ -1030,10 +1037,10 @@ mod tests {
                 rpc_url: "rpc_url".to_string(),
                 fee_recipient: None,
                 max_tx_size: 1000000,
-                fee: TxFee {
+                gas_config: any::Config::Fixed(TxFee {
                     gas_wanted: 100,
                     gas_fee: "1ugnot".to_owned(),
-                },
+                }),
             }
         );
     }
