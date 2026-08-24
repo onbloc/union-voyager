@@ -317,6 +317,55 @@ impl Module {
             })
             .await
     }
+
+    fn handle_gno_tx_failure(
+        &self,
+        log: String,
+        mut msgs: Vec<IbcMessage>,
+        retryable_context: &str,
+    ) -> RpcResult<Op<VoyagerMessage>> {
+        let _span: tracing::span::EnteredSpan = info_span!("gno msg failed").entered();
+        info!(%log, "tx log");
+
+        let Some(kind) = gno_permanent_tx_failure(&log) else {
+            warn!("error submitting transaction: {log}");
+
+            return Err(RpcError::retryable_from_message(format!(
+                "{retryable_context}: {log}"
+            )));
+        };
+
+        let reason = match kind {
+            GnoTxFailureKind::AlreadyProcessed(reason) => reason,
+            GnoTxFailureKind::MalformedMessage(reason) => {
+                error!(%reason, "gno msg failed due to a malformed message or misconfiguration");
+                reason
+            }
+        };
+
+        if msgs.len() == 1 {
+            warn!(
+                msg = %into_value(msgs.pop().expect("msgs.len() == 1; qed")),
+                %reason,
+                "gno msg failed permanently, dropping"
+            );
+
+            Ok(noop())
+        } else {
+            warn!(
+                %reason,
+                batch.size = %msgs.len(),
+                "splitting batch to isolate permanently failing message"
+            );
+
+            Ok(seq(msgs.into_iter().map(|msg| {
+                call(PluginMessage::new(
+                    self.plugin_name(),
+                    ModuleCall::SubmitTransaction(vec![msg]),
+                ))
+            })))
+        }
+    }
 }
 
 #[async_trait]
@@ -362,7 +411,7 @@ impl PluginServer<ModuleCall, Never> for Module {
     #[instrument(skip_all, fields(chain_id = %self.chain_id))]
     async fn call(&self, _: &Extensions, msg: ModuleCall) -> RpcResult<Op<VoyagerMessage>> {
         match msg {
-            ModuleCall::SubmitTransaction(mut msgs) => {
+            ModuleCall::SubmitTransaction(msgs) => {
                 let batch_submission_result = self.do_send_transaction(msgs.clone()).await;
 
                 match batch_submission_result {
@@ -386,52 +435,7 @@ impl PluginServer<ModuleCall, Never> for Module {
                         BroadcastTxCommitError::TxFailed { error, log } => {
                             info!(%log, "error submitting gno tx: {}", ErrorReporter(error));
 
-                            let _span: tracing::span::EnteredSpan =
-                                info_span!("gno msg failed").entered();
-                            info!(%log, "tx log");
-
-                            if let Some(kind) = gno_permanent_tx_failure(&log) {
-                                let reason = match kind {
-                                    GnoTxFailureKind::AlreadyProcessed(reason) => reason,
-                                    GnoTxFailureKind::MalformedMessage(reason) => {
-                                        error!(
-                                            %reason,
-                                            "gno msg failed due to a malformed message or misconfiguration"
-                                        );
-                                        reason
-                                    }
-                                };
-
-                                if msgs.len() == 1 {
-                                    warn!(
-                                        msg = %into_value(msgs.pop().unwrap()),
-                                        %reason,
-                                        "gno msg failed permanently, dropping"
-                                    );
-
-                                    Ok(noop())
-                                } else {
-                                    // atomic tx: split and retry individually to isolate the offender
-                                    warn!(
-                                        %reason,
-                                        batch.size = %msgs.len(),
-                                        "splitting batch to isolate permanently failing message"
-                                    );
-
-                                    Ok(seq(msgs.into_iter().map(|msg| {
-                                        call(PluginMessage::new(
-                                            self.plugin_name(),
-                                            ModuleCall::SubmitTransaction(vec![msg]),
-                                        ))
-                                    })))
-                                }
-                            } else {
-                                warn!("error submitting transaction: {log}");
-
-                                Err(RpcError::retryable_from_message(format!(
-                                    "error submitting tx, tx failed: {log}"
-                                )))
-                            }
+                            self.handle_gno_tx_failure(log, msgs, "error submitting tx, tx failed")
                         }
                         err => Err(RpcError::retryable("error submitting tx")(err)),
                     },
